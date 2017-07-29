@@ -1,0 +1,3 @@
+term        = single-term {" " single-term}
+single-term = lambda-term | "(" term ")" | variable | integer
+lambda-term = "\" variable " " term

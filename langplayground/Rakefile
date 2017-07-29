@@ -1,0 +1,54 @@
+directory "build"
+
+CFLAGS = ["-std=c++0x", "-Werror", "-Wall", "-Wextra", "-Wold-style-cast"]
+LNFLAGS = []
+CORE_HEADERS = [ENV["BOOST_INCLUDE_DIR"]]
+TEST_HEADERS = CORE_HEADERS + [ENV["GMOCK_INCLUDE_DIR"], ENV["GTEST_INCLUDE_DIR"]]
+TEST_LINK = ["-lgmock", "-lgtest", "-pthread"]
+
+def o_file name, dependencies, params = {}
+  source = "src/#{name}.cpp"
+  object = "build/#{name}.o"
+  include_paths = params.fetch(:include, [])
+  file object => ["build", source] + dependencies.map {|h| "src/#{h}.hpp"} + include_paths do
+    sh "g++ #{CFLAGS.join " "} #{include_paths.map {|h| "-I#{h}"}.join " "} -c #{source} -o #{object}"
+  end
+end
+
+def program name, object_names, params = {}
+  executable = "build/#{name}"
+  objects = object_names.map {|o| "build/#{o}.o"}
+  link_flags = params.fetch(:link, [])
+  file executable => ["build"] + objects do
+    sh "g++ #{objects.join " "} -L#{ENV["GMOCK_LIB_DIR"]} #{link_flags.join " "} -o #{executable}"
+  end
+end
+
+o_file :core, [:core, :core_internal, :option], {:include => CORE_HEADERS}
+o_file :test, [:core, :core_internal, :option], {:include => TEST_HEADERS}
+o_file :repl, [:core], {:include => CORE_HEADERS}
+
+program :test, [:test, :core], {:link => TEST_LINK}
+program :repl, [:repl, :core], {:link => ["-lreadline"]}
+
+desc "Run tests"
+task :test => "build/test" do
+  sh "build/test"
+end
+
+desc "Start an interactive REPL"
+task :repl => "build/repl" do
+  sh "build/repl"
+end
+
+desc "Remove built files"
+task :clean do
+  rm_r "build"
+end
+
+desc "Build documentation"
+task :doc => "build" do
+  sh "markdown README.md > build/README.html"
+end
+
+task :default => :test

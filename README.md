@@ -22,3 +22,4 @@ Various little bits of code that I don't want to lose.
 | [codeoperation](codeoperation) | ✗ | Cooperative code editor |
 | [egcrossentropy](egcrossentropy) | ✓ | Cross entropy example demo code (for a presentation) |
 | [handicappedrps](handicappedrps) | ✓ | Tiny test code to simulate a handicapped game of RPS |
+| [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
