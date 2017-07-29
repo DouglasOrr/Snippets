@@ -21,3 +21,4 @@ Various little bits of code that I don't want to lose.
 | [clojuresounddojo](clojuresounddojo) | ✓ | Interactive music Dojo for playing with waveforms in Clojure |
 | [codeoperation](codeoperation) | ✗ | Cooperative code editor |
 | [egcrossentropy](egcrossentropy) | ✓ | Cross entropy example demo code (for a presentation) |
+| [handicappedrps](handicappedrps) | ✓ | Tiny test code to simulate a handicapped game of RPS |
