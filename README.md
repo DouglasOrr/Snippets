@@ -20,3 +20,4 @@ Various little bits of code that I don't want to lose.
 | [chopdrop](chopdrop) | ✓ | Android chopper game |
 | [clojuresounddojo](clojuresounddojo) | ✓ | Interactive music Dojo for playing with waveforms in Clojure |
 | [codeoperation](codeoperation) | ✗ | Cooperative code editor |
+| [egcrossentropy](egcrossentropy) | ✓ | Cross entropy example demo code (for a presentation) |
