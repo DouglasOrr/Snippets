@@ -1,0 +1,2 @@
+docker rm $(docker ps -aqf status=exited)
+docker rmi $(docker images -qf "dangling=true")

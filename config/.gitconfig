@@ -1,0 +1,10 @@
+[core]
+	editor = emacs
+[user]
+	email = douglas.orr99@gmail.com
+	name = Douglas Orr
+[alias]
+	s = status -sb
+	l = log --oneline --decorate
+[push]
+	default = simple
