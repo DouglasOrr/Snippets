@@ -18,3 +18,4 @@ Various little bits of code that I don't want to lose.
 | [recordandplayback](recordandplayback) | ✓ | Record & play back calls to vars in Clojure |
 | [balance](balance) | ✓ | Inverted pendulum balance game in Clojure |
 | [chopdrop](chopdrop) | ✓ | Android chopper game |
+| [clojuresounddojo](clojuresounddojo) | ✓ | Interactive music Dojo for playing with waveforms in Clojure |

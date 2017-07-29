@@ -1,0 +1,19 @@
+# Making sounds
+
+## Waveforms
+sine, sawtooth, square, triangle, pulse, +funkier-periodic-functions?
+ADSR, exponential-decay
+
+## Combiners/effects
+clipping (hard/soft), mix, amplify
+envelope/tremolo, vibrato, delay/reverb, doppler, flanger
+
+## Frequency domain (samples?)
+low/high/band filters, shepard tone
+
+## Instruments
+flute, oboe, violin, guitar, piano, trumpet, drum...
+
+# Making music
+
+scales, melody/rhythm DSL, loop, modulate, invert, reverse
