@@ -1,0 +1,48 @@
+body {
+  margin:0px;
+  padding:0px;
+}
+.nav {
+  display:inline;
+}
+.navlink {
+}
+.navlink-chosen {
+  font-weight:bold;
+}
+
+.CodeMirror-scroll {
+  position:absolute;
+  top:0;
+  bottom:0;
+  right:0;
+  left:0;
+  margin-top:4em;    /* space for navigation */
+  margin-right:19em; /* space for chat */
+  height:100%;
+  overflow-y:auto;
+}
+#chat {
+  width:15em;
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+}
+#chatstream {
+  position:absolute;
+  bottom:9em;
+  top:0;
+  right:0;
+  left:0;
+  overflow:auto;
+}
+#chatinput {
+  position:absolute;
+  bottom:0;
+  right:0;
+}
+#chattext {
+  resize:none;
+}
+

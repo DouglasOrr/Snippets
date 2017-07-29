@@ -1,0 +1,49 @@
+= Codeoperation - an online tool for writing code together
+
+Codeoperation is intended to simplify the process of collborating on code remotely, sharing tips & opinions with the help of a 'syncing' editor. It is also our first try at web development, so is hopefully a learning process as well.
+
+We're based on Ruby's Sinatra, and are always keen to use whatever libraries we can to simplify the process!
+
+== Requirements
+* Ruby 1.9 - consider {RVM}[http://wiki.brightbox.co.uk/docs:rvm]
+  * Note: If using apt-get to install Ruby, you should use <code>apt-get install ruby1.9.1-dev</code>
+* Sinatra - <code>gem install sinatra</code>
+* Thin - <code>gem install thin</code>
+* Haml - <code>gem install haml</code>
+
+== Getting started
+ git clone git@github.com:DouglasOrr/Codeoperation.git
+ git submodule init
+ git submodule update  # pull down CodeMirror
+
+ rake start            # host a server locally
+ rake doc              # build documentation into doc/
+ rake test             # run the tests
+
+== Development resources
+* {Sinatra intro}[http://www.sinatrarb.com/intro]
+* {Codemirror home}[http://codemirror.net/doc/manual.html]
+* {Markdown reference}[http://daringfireball.net/projects/markdown/]
+* {HTML tags}[http://www.w3schools.com/tags]
+* {JQuery examples}[http://www.w3schools.com/jquery/jquery_examples.asp]
+* {JQuery stream API}[http://code.google.com/p/jquery-stream/wiki/API]
+* {JQuery cookie plugin}[https://github.com/carhartl/jquery-cookie]
+* {Haml reference}[http://haml-lang.com/docs/yardoc/file.HAML_REFERENCE.html]
+
+== Research resources
+* {Giffy SureMerge}[http://www.guiffy.com/SureMergeWP.html]
+* {A formal investigation of Diff3}[http://www.cis.upenn.edu/~bcpierce/papers/diff3-short.pdf]
+* {How Google Docs works 1}[http://googledocs.blogspot.com/2010/09/whats-different-about-new-google-docs.html]
+* {How Google Docs works 2}[http://googledocs.blogspot.com/2010/09/whats-different-about-new-google-docs_22.html]
+* {How Google Docs works 3}[http://googledocs.blogspot.com/2010/09/whats-different-about-new-google-docs_23.html]
+* {Codepad}[http://codepad.org/]
+
+== Used libraries
+* Sinatra (MIT license)
+* Codemirror (MIT license)
+* JQuery (MIT or GPLv2 license)
+* jquery.stream (Apache license v2)
+* jquery.cookie (MIT or GPLv2 license)
+* QUnit (test) (MIT or GPLv2 license)
+* Haml (MIT license)
+

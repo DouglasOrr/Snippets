@@ -1,0 +1,4 @@
+[submodule "lib/CodeMirror"]
+  path = lib/CodeMirror
+  url = git://github.com/marijnh/CodeMirror2.git
+  update = v2.22

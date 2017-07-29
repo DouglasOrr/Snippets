@@ -19,3 +19,4 @@ Various little bits of code that I don't want to lose.
 | [balance](balance) | ✓ | Inverted pendulum balance game in Clojure |
 | [chopdrop](chopdrop) | ✓ | Android chopper game |
 | [clojuresounddojo](clojuresounddojo) | ✓ | Interactive music Dojo for playing with waveforms in Clojure |
+| [codeoperation](codeoperation) | ✗ | Cooperative code editor |

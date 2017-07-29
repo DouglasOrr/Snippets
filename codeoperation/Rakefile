@@ -1,0 +1,24 @@
+
+task :default => :start
+
+task :start do
+  `ruby app/server.rb`
+end
+
+task :doc do
+  puts "Generating documentation..."
+  `rdoc -x public -x lib --main README.rdoc --title "Codeoperation - an online tool for writing code together"`
+end
+
+task :test do
+  puts "Running tests..."
+  npass, nfail = 0, 0
+  FileList['test/test_*.rb'].each do |t|
+    puts `ruby -d -Ilib #{t}`
+    if $?.exitstatus == 0 then npass += 1 else nfail += 1 end
+  end
+  puts "_" * 100
+  puts "#{nfail == 0 ? "PASSED" : "FAILED"}: #{npass} pass, #{nfail} fail"
+end
+
+task :build => [:doc, :test]

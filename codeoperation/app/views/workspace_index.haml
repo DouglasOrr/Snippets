@@ -1,0 +1,13 @@
+!!! XML
+!!!
+%html{:xmlns => "http://www.w3.org/1999/xhtml", :"xml:lang" => "en", :lang => "en"}
+  %head
+    %title= workspace_name
+    %link{:rel => "stylesheet", :href => "/dark.css"}
+  %body
+    %h1= workspace_name
+    %p Select a file from the following list to begin:
+    %ul
+      - files.each do |name,link|
+        %p 
+          %a{:href => link}= name

@@ -1,0 +1,54 @@
+body {
+  background-color:#444;
+  color: #ddd;
+}
+A:link { color: #0cc; }
+A:visited { color: #0cc; }
+A:active { color: #0cc; }
+A:hover { color: #0cc; }
+
+.CodeMirror { }
+
+/* a custom, dark, theme */
+.cm-s-dark {
+  background-color:#444;
+  color: #ddd;
+}
+.cm-s-dark pre.CodeMirror-cursor { border-left: 1px solid #aaa; }
+.cm-s-dark div.CodeMirror-selected { background: #666 !important; }
+.cm-s-dark .CodeMirror-matchingbracket {color: #0ff !important;}
+.cm-s-dark .CodeMirror-nonmatchingbracket {color: #f22 !important;}
+.CodeMirror-gutter {
+  background: #444;
+  border-right: none;
+}
+.CodeMirror-gutter-text { color: #888; }
+
+.cm-s-dark span.cm-error {color: #f00; font-weight:700;}
+
+.cm-s-dark span.cm-comment {color: #995;}
+.cm-s-dark span.cm-number {color: #fc0;}
+.cm-s-dark span.cm-keyword {color: #eee; font-weight:700;} /* e.g. C++ class */
+.cm-s-dark span.cm-string {color: #ee0;}
+.cm-s-dark span.cm-string-2 {color: #ee0;}
+.cm-s-dark span.cm-atom {color: #0cc;} /* e.g. Ruby :key */
+.cm-s-dark span.cm-bracket {color: #c84;} /* e.g. Clojure [] () {} */
+
+.cm-s-dark span.cm-builtin {color: #ddd;} /* e.g. Clojure println */
+.cm-s-dark span.cm-property {color: #ddd;} /* e.g. Javascript a.prop = b */
+.cm-s-dark span.cm-def {color: #ddd;} /* e.g. Ruby def */
+.cm-s-dark span.cm-variable {color: #ddd;}
+.cm-s-dark span.cm-variable-2 {color: #8ae;} /* e.g. Ruby @var */
+.cm-s-dark span.cm-variable-3 {color: #8ae;} /* e.g. Ruby $var */
+.cm-s-dark span.cm-operator {color: #fff;}
+.cm-s-dark span.cm-tag {color: #5c5;} /* e.g. Ruby Integer */
+.cm-s-dark span.cm-meta {color: #8ae;} /* e.g. C++ #include */
+
+ /* Rarely used */
+.cm-s-dark span.cm-attribute {color: #ddd;}
+.cm-s-dark span.cm-link {color: #ddd;}
+.cm-s-dark span.cm-qualifier {color: #ddd;}
+.cm-s-dark span.cm-header {color: #ddd;}
+.cm-s-dark span.cm-quote {color: #ddd;}
+.cm-s-dark span.cm-hr {color: #ddd;}
+

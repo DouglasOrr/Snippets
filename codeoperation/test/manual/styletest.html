@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC
+  "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>CodeMirror stylesheet test page</title>
+    <link rel="stylesheet" href="codem/lib/codemirror.css" />
+    <link rel="stylesheet" href="dark.css" />
+
+    <script src="codem/lib/codemirror.js"></script>
+    <script src="codem/mode/ruby/ruby.js"></script>
+    <script src="codem/mode/javascript/javascript.js"></script>
+    <script src="codem/mode/clojure/clojure.js"></script>
+    <script src="codem/mode/clike/clike.js"></script>
+  </head>
+  <body>
+    <h1>CodeMirror stylesheet test page</h1>
+    <textarea id="rubycode" name="code">
+# E.g. content
+class Classy
+  def dosomething
+  end
+end
+
+get '/' do
+  redirect to('/index.html')
+end
+
+123.5+7
+:whoami
+false
+@one
+@@two
+$two
+Integer("123")
+{:a => 1, :b => 2}
+    </textarea>
+    <textarea id="clojurecode" name="code">
+(println [:hello :world])
+(println #{"Everything alright?"})
+(println (map #(+ %1 %2) [1 2 3] [4 5 6]))
+    </textarea>
+    <textarea id="cppcode" name="code">
+#include "foobar.h"
+
+using namespace std;
+
+// A demonstration
+class Classy {
+    int f(const Blah& x) { return x.blah() + 1; }
+};
+    </textarea>
+    <textarea id="javascriptcode" name="code">
+a.b="something"
+    </textarea>
+
+    <script>
+      var themeName = "dark"
+      var rubyEditor = CodeMirror.fromTextArea(document.getElementById("rubycode"), {
+        mode: "ruby",
+        theme: themeName,
+        lineNumbers: true,
+        matchBrackets: true
+      });
+      var clojureEditor = CodeMirror.fromTextArea(document.getElementById("clojurecode"), {
+        mode: "clojure",
+        theme: themeName,
+        lineNumbers: true,
+        matchBrackets: true
+      });
+      var cppEditor = CodeMirror.fromTextArea(document.getElementById("cppcode"), {
+        mode: "text/x-c++src",
+        theme: themeName,
+        lineNumbers: true,
+        matchBrackets: true
+      });
+      var javascriptEditor = CodeMirror.fromTextArea(document.getElementById("javascriptcode"), {
+        mode: "javascript",
+        theme: themeName,
+        lineNumbers: true,
+        matchBrackets: true
+      });
+    </script>
+  </body>
+</html>

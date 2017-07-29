@@ -1,0 +1,13 @@
+!!! XML
+!!!
+%html{:xmlns => "http://www.w3.org/1999/xhtml", :"xml:lang" => "en", :lang => "en"}
+  %head
+    %title Codeoperation
+    %link{:rel => "stylesheet", :href => "/dark.css"}
+  %body
+    %h1 Codeoperation
+    %p Select a workspace from the following list to begin:
+    %ul
+      - workspaces.each do |name,link|
+        %p
+          %a{:href => link}= name

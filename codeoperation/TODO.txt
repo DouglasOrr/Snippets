@@ -1,0 +1,11 @@
+A  implement an algorithm for shared updating/merging
+
+B  tests for client-side Javascript
+
+B  functional tests for server
+
+B  improved navigation
+
+B  split out chat component
+
+C  server provides a shell/workspace/open function
