@@ -13,6 +13,7 @@ Various little bits of code that I don't want to lose.
 | [mbtai](mbtai) | ✗ | AI & simulator for the a tank driving game |
 | [rustdojo](rustdojo) | ✓ | Interactive programming Dojo for playing with Rust |
 | [rustedrays](rustedrays) | ✓ | Very simple raytracer demo in Rust |
-| [pendulum](pendulum) | ✓ | Inverted pendulum balance game (an interview question) |
+| [pendulum](pendulum) | ✓ | Inverted pendulum balance game in Python (an interview question) |
 | [jsmandelbrot](jsmandelbrot) | ✓ | A tiny mandelbrot demo in Javascript |
 | [recordandplayback](recordandplayback) | ✓ | Record & play back calls to vars in Clojure |
+| [balance](balance) | ✓ | Inverted pendulum balance game in Clojure |
