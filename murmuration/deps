@@ -1,0 +1,4 @@
+LIB="js/lib"
+
+mkdir -p ${LIB}
+wget https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js -O ${LIB}/jquery.min.js

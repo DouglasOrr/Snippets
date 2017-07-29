@@ -24,3 +24,4 @@ Various little bits of code that I don't want to lose.
 | [handicappedrps](handicappedrps) | ✓ | Tiny test code to simulate a handicapped game of RPS |
 | [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
 | [crypto-013](crypto-013) | ✓ | Mooc homework (please don't cheat) - Cryptography 013 |
+| [murmuration](murmuration) | ✓ | Tiny demo code - flocking simulation in Javascript |
