@@ -1,0 +1,11 @@
+# demo level
+#  *  terrain
+#  t  turret (defense)
+#  o  objective (target)
+#  s  start
+
+     *
+     *
+     *
+     *     s
+o  t *

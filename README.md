@@ -17,3 +17,4 @@ Various little bits of code that I don't want to lose.
 | [jsmandelbrot](jsmandelbrot) | ✓ | A tiny mandelbrot demo in Javascript |
 | [recordandplayback](recordandplayback) | ✓ | Record & play back calls to vars in Clojure |
 | [balance](balance) | ✓ | Inverted pendulum balance game in Clojure |
+| [chopdrop](chopdrop) | ✓ | Android chopper game |
