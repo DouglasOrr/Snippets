@@ -1,0 +1,13 @@
+h1 {
+    margin-bottom: 20px;
+}
+#controls {
+    height: 60px;
+}
+#labels {
+    display: inline-block;
+    float: right;
+    font-size: x-large;
+    list-style-type: none;
+    text-align: right;
+}

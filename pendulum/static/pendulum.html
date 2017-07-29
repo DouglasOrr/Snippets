@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Man vs Machine</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/pendulum.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <h1>Man vs Machine - pendulum challenge</h1>
+      </div>
+      <div id="controls" class="row">
+        <button id="restart" class="btn btn-success">Restart</button>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default dropdown-toggle"
+                  data-toggle="dropdown" aria-expanded="false">
+            Controller <span class="caret"></span>
+          </button>
+          <ul id="controllers" class="dropdown-menu" role="menu">
+            <li><a href="#">Action</a></li>
+            <li><a href="#">Another action</a></li>
+            <li><a href="#">Something else here</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+          </ul>
+        </div>
+        <ul id="labels" class="list-group">
+          <li><span id="simulation-time" class="label label-success">Elapsed</span></li>
+          <li><span id="label-manual" class="label label-warning">Manual</span></li>
+          <li><span id="label-auto" class="label label-warning">Control</span></li>
+        </ul>
+      </div>
+      <canvas id="main-canvas" class="center-block" width="800" height="800"></canvas>
+    </div>
+  </body>
+
+</html>
