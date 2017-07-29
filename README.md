@@ -14,3 +14,4 @@ Various little bits of code that I don't want to lose.
 | [rustdojo](rustdojo) | ✓ | Interactive programming Dojo for playing with Rust |
 | [rustedrays](rustedrays) | ✓ | Very simple raytracer demo in Rust |
 | [pendulum](pendulum) | ✓ | Inverted pendulum balance game (an interview question) |
+| [jsmandelbrot](jsmandelbrot) | ✓ | A tiny mandelbrot demo in Javascript |
