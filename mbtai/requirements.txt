@@ -1,0 +1,7 @@
+flask
+nose
+coverage
+numpy
+flake8
+flake8-quotes
+pdoc

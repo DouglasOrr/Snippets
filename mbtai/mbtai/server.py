@@ -1,0 +1,15 @@
+'''Server front-end for running games/tournaments, served up to a web client.
+'''
+
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def hello():
+    return 'Welcome to MBTAI'
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
