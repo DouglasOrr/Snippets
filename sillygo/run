@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+import argparse
+import subprocess
+
+
+def sh(cmd):
+    out = subprocess.call(cmd, shell=True)
+    if out:
+        exit(out)
+
+parser = argparse.ArgumentParser("""
+Helper for running our Silly-Go project.
+""")
+parser.add_argument('-b', '--build', action='store_true')
+parser.add_argument('targets', nargs='*', default=['ci'])
+args = parser.parse_args()
+
+if args.build:
+    sh("docker build --rm -t sillygo .")
+
+run_interactive \
+    = 'docker run --rm -it -p 5000:5000 -v `pwd`:/code -w /code sillygo '
+targets = set(args.targets)
+
+if set(['test', 'check', 'ci']) & targets:
+    sh(run_interactive + 'nosetests sillygo')
+
+if set(['flake', 'check', 'ci']) & targets:
+    sh(run_interactive + 'flake8 sillygo')
+
+if set(['doc', 'ci']) & targets:
+    sh(run_interactive +
+       'env PYTHONPATH=. pdoc sillygo --overwrite --html --html-dir docs')
+
+if 'repl' in targets:
+    sh(run_interactive + 'python3')
+
+if 'server' in targets:
+    sh(run_interactive + 'python3 -m sillygo.server')
+
+if 'game' in targets:
+    sh(run_interactive + 'python3 -m sillygo.terminal')

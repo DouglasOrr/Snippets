@@ -1,0 +1,10 @@
+git+git://github.com/Theano/Theano.git
+https://github.com/Lasagne/Lasagne/archive/master.zip
+flask
+nose
+nose-parameterized
+coverage
+numpy
+flake8
+flake8-quotes
+pdoc
