@@ -1,0 +1,11 @@
+[package]
+
+name = "mandelbrot_dojo"
+version = "0.0.1"
+authors = ["Douglas Orr <douglas.orr99@gmail.com>"]
+
+[dependencies]
+image = "*"
+num = "*"
+argparse = "*"
+# threadpool = "*"

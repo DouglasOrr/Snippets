@@ -11,3 +11,4 @@ Various little bits of code that I don't want to lose.
 | [treelearn](treelearn) | ✗ | Idea for a continuous training paradigm |
 | [sillygo](sillygo) | ✗ | AI & simulator for the game of Go |
 | [mbtai](mbtai) | ✗ | AI & simulator for the a tank driving game |
+| [rustdojo](rustdojo) | ✓ | Interactive programming Dojo for playing with Rust |
