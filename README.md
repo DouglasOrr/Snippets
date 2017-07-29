@@ -8,9 +8,6 @@ Various little bits of code that I don't want to lose.
 | ---- | ------- | ----------- |
 | [powerset](powerset) | ✓ | Code golf - an interview question reference implementation |
 | [theano](theano) | ✓ | Some Theano training snippets |
-| [treelearn](treelearn) | ✗ | Idea for a continuous training paradigm |
-| [sillygo](sillygo) | ✗ | AI & simulator for the game of Go |
-| [mbtai](mbtai) | ✗ | AI & simulator for the a tank driving game |
 | [rustdojo](rustdojo) | ✓ | Interactive programming Dojo for playing with Rust |
 | [rustedrays](rustedrays) | ✓ | Very simple raytracer demo in Rust |
 | [pendulum](pendulum) | ✓ | Inverted pendulum balance game in Python (an interview question) |
@@ -19,9 +16,12 @@ Various little bits of code that I don't want to lose.
 | [balance](balance) | ✓ | Inverted pendulum balance game in Clojure |
 | [chopdrop](chopdrop) | ✓ | Android chopper game |
 | [clojuresounddojo](clojuresounddojo) | ✓ | Interactive music Dojo for playing with waveforms in Clojure |
-| [codeoperation](codeoperation) | ✗ | Cooperative code editor |
 | [egcrossentropy](egcrossentropy) | ✓ | Cross entropy example demo code (for a presentation) |
 | [handicappedrps](handicappedrps) | ✓ | Tiny test code to simulate a handicapped game of RPS |
-| [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
 | [crypto-013](crypto-013) | ✓ | Mooc homework (please don't cheat) - Cryptography 013 |
 | [murmuration](murmuration) | ✓ | Tiny demo code - flocking simulation in Javascript |
+| [codeoperation](codeoperation) | ✗ | Cooperative code editor |
+| [treelearn](treelearn) | ✗ | Idea for a continuous training paradigm |
+| [sillygo](sillygo) | ✗ | AI & simulator for the game of Go |
+| [mbtai](mbtai) | ✗ | AI & simulator for the a tank driving game |
+| [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
