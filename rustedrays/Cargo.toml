@@ -1,0 +1,8 @@
+[package]
+name = "raytracer"
+version = "0.0.1"
+authors = ["Douglas Orr <douglas.orr99@gmail.com>"]
+
+[dependencies]
+image = "*"
+threadpool = "*"
