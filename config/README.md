@@ -1,0 +1,17 @@
+# Setup notes
+
+ - Install Google Chrome
+ - `ssh-keygen` & add private key to GitHub
+ - Install essentials from apt
+   - `git`
+   - `emacs-nox`
+   - `tree`
+   - `htop`
+   - `bmon`
+   - `docker-ce` (install repository first)
+   - `compizconfig-settings-manager`
+   - `compiz-plugins` (so we can change the app switcher)
+ - Copy config from this project
+   - `sudo cp -r bin /opt/bin`
+   - `cp .emacs .gitconfig ~`
+   - Manually merge `.bashrc`
