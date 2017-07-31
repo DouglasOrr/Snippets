@@ -15,3 +15,6 @@
    - `sudo cp -r bin /opt/bin`
    - `cp .emacs .gitconfig ~`
    - Manually merge `.bashrc`
+ - Install pip
+   - `wget https://bootstrap.pypa.io/get-pip.py`
+   - `python3 get-pip.py --user`
