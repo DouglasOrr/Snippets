@@ -8,6 +8,9 @@
    - `tree`
    - `htop`
    - `bmon`
+   - `net-tools`
+   - `powertop`
+   - `jq`
    - `docker-ce` (install repository first)
    - `compizconfig-settings-manager`
    - `compiz-plugins` (so we can change the app switcher)
