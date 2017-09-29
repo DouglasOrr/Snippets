@@ -1,0 +1,5 @@
+echo "http://localhost:8888 password: atpmein"
+
+docker run -d -p 8888:8888 -v $(pwd):/home/jovyan/work --name ipython \
+    jupyter/scipy-notebook \
+    start-notebook.sh --NotebookApp.password='sha1:6b5606fc9f83:443065fb96233be987be5a3ea8d8543e787a6c92'
