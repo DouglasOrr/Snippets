@@ -1,7 +1,12 @@
-docker rm -f notebook
-docker run -d -p 8888:8888 -v $(pwd):/work -w /work --name notebook \
-    jupyter/scipy-notebook \
-    start-notebook.sh --NotebookApp.password='sha1:6b5606fc9f83:443065fb96233be987be5a3ea8d8543e787a6c92'
+NAME="notebook"
+IMAGE="${1:-jupyter/scipy-notebook}"
+
+docker rm -f "${NAME}"
+docker run -d  --name "${NAME}" -p 8888:8888      \
+     -v $(pwd):/work -w /work -e PYTHONPATH=/work \
+    ${IMAGE}                                      \
+    start-notebook.sh                             \
+    --NotebookApp.password='sha1:6b5606fc9f83:443065fb96233be987be5a3ea8d8543e787a6c92'
 
 echo "http://localhost:8888"
 echo "password: atpmein"
