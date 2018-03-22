@@ -1,0 +1,4 @@
+*.so
+*.ipynb
+__pycache__
+.pytest_cache

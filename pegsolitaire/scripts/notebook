@@ -1,0 +1,8 @@
+docker rm -f pegsolitaire
+
+docker run --rm -d --name pegsolitaire -v `pwd`:/work -w /work -e PYTHONPATH=/work -p 8888:8888 \
+       pegsolitaire \
+       jupyter notebook --no-browser --allow-root \
+       --NotebookApp.password='sha1:3ff87339c332:ed915cfb9c41889a99e772986b642da8f36e75ed'
+
+echo "http://localhost:8888 pegzsolitaire"
