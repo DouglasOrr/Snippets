@@ -56,12 +56,13 @@ def show_instructions(mask, states):
     yield show(mask, states[0])
     for prev, _next in zip(states[:-1], states[1:]):
         diff = _next.astype(np.int32) - prev.astype(np.int32)
-        yield '\n'.join(
+        d = '\n'.join(
             ' '.join(' ' if not m else ('.'
                                         if d == 0 else
                                         ('#' if d < 0 else '+'))
                      for m, d in zip(mm, dd))
             for mm, dd in zip(mask, diff))
+        yield '{}\n ->\n{}'.format(d, show(mask, _next))
 
 
 def invert(mask, pegs):
@@ -113,6 +114,7 @@ def solve(mask, start):
 if __name__ == '__main__':
     mask, start = english_board()
     solution = next(solve(mask, start))
-    for step in show_instructions(mask, solution):
+    for n, step in enumerate(show_instructions(mask, solution)):
+        print('# {} {}'.format(n, '-' * 80))
         print(step)
         print()
