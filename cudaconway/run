@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+
+
+def sh(fmt, *args, **kwargs):
+    cmd = fmt.format(*args, **kwargs)
+    if subprocess.call(cmd, shell=True):
+        exit(1)
+
+
+def build():
+    sh('docker build --rm -t cudaconway .')
+
+
+def run(command):
+    sh('docker run --rm -it -v `pwd`:/work -w /work'
+       ' cudaconway {command}',
+       command=' '.join(command))
+
+
+def notebook(port):
+    password = 'sha1:52ada35b1f56:87318e0191ac78a6572a505157754ee438340248'
+    print('http://localhost:{port} password: okrabayte'.format(port=port))
+    sh('docker rm -f cudaconway-notebook || true')
+    sh('docker run -d --name cudaconway-notebook'
+       ' -v `pwd`:/work -w /work -p {port}:{port}'
+       ' cudaconway'
+       ' jupyter notebook --allow-root --no-browser'
+       ' --NotebookApp.password={password} --ip "*" --port={port}',
+       port=port,
+       password=password)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run script for cudaconway')
+    subparsers = parser.add_subparsers()
+
+    subparsers.add_parser('build').set_defaults(action=build)
+
+    p = subparsers.add_parser('run')
+    p.add_argument('command', nargs='*')
+    p.set_defaults(action=run)
+
+    p = subparsers.add_parser('notebook')
+    p.add_argument('-p', '--port', default=9999,
+                   help='port to open the notebook on')
+    p.set_defaults(action=notebook)
+
+    args = vars(parser.parse_args())
+    action = args.pop('action')
+    action(**args)
