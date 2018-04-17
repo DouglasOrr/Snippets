@@ -2,6 +2,24 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+
+**Investigating Human Priors for Playing Video Games**
+
+- Date revised: 2018-02-15
+- Date read: 2018-04-17
+- Link: https://arxiv.org/abs/1802.10217
+- Topics: deep learning, reinforcement learning
+
+Uses human trials to evaluate the importance of different priors that people make use of when solving a new task (a video game), which allow them to learn games much more rapidly than current reinforcement learning algorithms. One of many simplifications made by RL is to start with zero knowledge (or a very weak spatial prior from a convolutional layer), and learn from scratch for each new task. Clearly this isn't how people approach a new task. By confounding the various priors that might help a person learn how to solve a new task, the paper tries to assign importance to different priors. They identify first visual similarity of similar objects, then affordances that indicate the semantics of an object, then the particular interactions between objects that you would expect.
+
+ - It is great to see the problem of sample efficiency identified & worked on - what's next in this very important area?
+ - What else is missing, as this seems to account for an order of magnitude (in terms of number experiences needed to solve the task) in their examples, yet RL is maybe still 1-2 orders of magnitude out?
+   - Are there still priors that are being used?
+   - Possibly more structural or "problem solving" priors?
+     - Is there a fundamental difference between a prior & a learning algorithm, or are they part of the same thing?
+ - Can we learn such priors (by sharing them between tasks), rather than either starting from scratch, or trying to encode the priors manually?
+
+
 **On the Optimization of Deep Networks: Implicit Acceleration by Overparameterization**
 
 - Date revised: 2018-02-19
@@ -14,6 +32,7 @@ Adding depth to a linear network, which doesn't change the expressiveness of the
 - Could this be simply applied to speed up training e.g. splitting linear layers in two (there need be no penalty at inference time)?
 - How closely does this apply for deep nonlinear networks?
 - Does this integration-like behaviour create instability in deeper networks?
+
 
 **Expressive Power of Recurrent Neural Networks**
 
