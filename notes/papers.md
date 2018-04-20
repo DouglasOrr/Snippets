@@ -3,6 +3,22 @@
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
 
+**TrueSkill(TM): A Bayesian Skill Rating System**
+
+- Date revised: 2007-01-01
+- Date read: 2018-04-19
+- Link: https://www.microsoft.com/en-us/research/wp-content/uploads/2007/01/NIPS2006_0688.pdf
+- Topics: bayesian, gaming, ranking, matchmaking
+
+Extends the statistical mechanism behind ELO rating calculation to work in ranked team games (rather than winner-takes-all solo games). To do this, builds a Bayesian model for the unknown variables _skill_ & _performance_. Skill is a slowly-changing underlying characteristic of a player, which defines a distribution of possible performances. Player performance is a number which represents a single player's actual contribution towards success in a given game (and is drawn based on skill). Team performance is simply the sum of individual performances on that team. This is a very simple, very linear, model in which every prior, posterior & marginal is a Gaussian (the approximate learning scheme is called _Gaussian density filtering_, and inference can be run using very efficient message passing.) The learning scheme is adapted quite simply to allow skills to vary over time, which (unsurprisingly) corresponds to adding variance to the prior for skill. The model is simple, interpretable, and out-performs ELO in a variety of tests (it is somewhat like ELO with an extra layer of latent variables, which gives it more explanatory power as a model over the games it observes). It is very efficient to run, and was deployed for matchmaking in Xbox Live.
+
+ - What is the biggest limiting assumption?
+   - What if the 'combiner' operation for calculating team performance from player performance wasn't linear?
+   - What if player performances weren't independently drawn?
+ - Could inference be done nearly as efficiently if distributions weren't Gaussian, or operations weren't linear?
+ - What would be the drawback of developing/deploying a more complex, less interpretable, model?
+
+
 **Curiosity-driven Exploration by Self-supervised Prediction**
 
 - Date revised: 2017-05-15
