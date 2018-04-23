@@ -3,6 +3,56 @@
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
 
+**Sensitivity and Generalization in Neural Networks: An Empirical Study**
+
+- Date revised: 2018-02-23
+- Date read: 2018-04-23
+- Link: https://arxiv.org/abs/1802.08760
+- Topics: deep learning, generalization
+
+This paper acknowleges an odd property of deep learning models - they don't fit the expected pattern of more parameters leading to greater expressivity, but weaker generalization (more overfitting). The paper therefore argues for measuring _sensitivity to input_ as a better proxy metric to understand generalization, rather than simply counting parameters. To do this, they introduce two simple metrics for measuring sensitivity. Their analysis is restricted to piecewise linear networks (RELU or Hard Tanh/Sigmoid, etc.) The first metric is for linear segment gradient - a (Frobenius) norm of the Jacobian (which predicts the change in output for a small normally distributed input change). The second metric is for density of segment transitions (which is a measure of curvature of such a non-smooth function). Their results show that these metrics take the lowest value (least sensitive) in the training data space, then medium values in regions "close by" (e.g. interpolations between same-class MNIST digits), and the largest values for random points in the input domain. They then analyse how these metrics behave under experiment variations such as random labelling, data augmentation, choice of nonlinearity, and use of a full-batch optimizer. In particular, the gradient measure correlates with generalization gap. Overall, this shows that deep learning seems to train relatively low-gradient & smooth functions around the input domain, which helps it to generalize.
+
+- Why might more parameters mean smoother & more linear functions in the data domain?
+- Could similar analysis be perfomed with smooth nonlinearities such as tanh/elu?
+- Could training with hard (value) discontinuities perform better?
+  - Making it easier to "transition values" in regions outside the data space.
+- Is this (low input sensitivity) the cause or the effect of good generalization?
+
+
+**Massively Parallel A* Search on a GPU**
+
+- Date revised: 2015
+- Date read: 2018-04-21
+- Link: http://iiis.tsinghua.edu.cn/~compbio/papers/aaai_2015.pdf
+- Topics: GPGPU, search, parallelism
+
+Introduces a parallel search for implementation on GPU, minimizing data dependencies to exploit the massive data parallelism of GPUs. The core idea is to allocate many priority queues for nodes to explore (thousands), and let each GPU thread explore a new state from each queue. This means that the parallel search will typically explore many more states than the sequential search, however it is worth it to weaken the data dependency & parallelize. Also describes data structures for efficient parallel duplication detection (hash sets), based on _cuckoo hashing_ and _parallel hashing with replacement_ (where contention for a hash bucket is resolved by replacing the old with the new). The results show a large speedup compared to a single-thread CPU algorithm, particularly where the trivially parallel work of computing heuristic functions is expensive.
+
+- Compare against an existing SIMD CPU A* search?
+- Compare against a CPU implementation of the same scheme?
+- Could block-level coordination be used to efficiently distribute good solutions amongst priority queues?
+  - Or is a random assignment likely to be "good enough"?
+
+
+**TrueSkill 2: An improved Bayesian skill rating system**
+
+- Date revised: 2018-03-22
+- Date read: 2018-04-20
+- Link: https://www.microsoft.com/en-us/research/uploads/prod/2018/03/trueskill2.pdf
+- Topics: bayesian, gaming, ranking, matchmaking
+
+Extends TrueSkill with some very practical improvements, while seeking the keep the model as simple as possible. First, describes online & batch updates, showing the greatly improved stability & convergence speed of computing skill updates in a batch. Second, makes the model parameters trainable using _expectation propagation_ with point MAP estimates of the trainable parameters (using point estimates improves memory & compute usage during training), updating using Rprop. The third improvement is to the model itself, which they perform by an approach called _metric driven modelling_. They seek to keep the model as simple as possible, but add components to the model to deal with particular high-bias failures of the model (identified by measuring metrics that show some important structure the model is failing to capture). For example, to address the fact that players that intentionally self-organize into _squads_ might over-perform, they compare win rate stats for different squad sizes to those predicted by their model. Since there is a correlation that is not picked up by the model, they add an additional component into the model (in this case a simple additive player performance bonus based on squad size). In the same way, they describe _experience_ effects (another offset based on number of games played), _individual stats_ (additional stats that can be generated from the model, such as kill & death counts) & a _quit penalty_ for failing to complete a game. They pragmatically only add features that are needed to explain the data, which seems a very sensible approach!
+
+- Could distributions be non-Gaussian?
+  - E.g. Generation of performance from skill could be heavy-tailed
+- Is there a way to search through possible structure in the data, rather than manually generating hypotheses?
+  - Maybe this wouldn't efficiently find "interaction structure" (as a person needs to generate the hypothesis & query the data in an appropriate way)?
+- Could a similar process of metric-driven modelling be appled to supervised deep learning models?
+  - Does it require an interpretable model?
+  - Could it be applied to choose inputs to a model?
+- Would it be possible to better formalize the "no bad incentives" constraint (that they rightly place upon the skill model)?
+
+
 **TrueSkill(TM): A Bayesian Skill Rating System**
 
 - Date revised: 2007-01-01
