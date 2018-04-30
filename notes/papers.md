@@ -19,7 +19,7 @@ This paper acknowleges an odd property of deep learning models - they don't fit 
 - Is this (low input sensitivity) the cause or the effect of good generalization?
 
 
-**Massively Parallel A* Search on a GPU**
+**Massively Parallel A\* Search on a GPU**
 
 - Date revised: 2015
 - Date read: 2018-04-21
