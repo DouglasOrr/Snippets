@@ -3,6 +3,23 @@
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
 
+**The Lottery Ticket Hypothesis: Training Pruned Neural Network Architectures**
+
+- Date revised: 2018-04-23
+- Date read: 2018-05-17
+- Link: https://arxiv.org/abs/1803.03635
+- Topics: deep learning, optimization, model capacity
+
+This paper tests a very interesting idea - (roughly) that large deep learning models perform better than small models because they have an increased probability of having initialized _lucky subsets_ of the parameters which can fit the data & objective structure well. They test this by training a large network, then pruning weights to reduce the size, then resetting the pruned weights to the original (untrained) values, and retraining. Retraining these sparser lucky subsets or _winning tickets_ can achieve a similar performance to the large network with a fraction (often under 5%) of the parameters. This is a very interesting finding, as it suggests that the scale of neural networks isn't acting to constrain the _capacity_ of the network (the amount of complexity it can fit in), but instead helping the optimizer to find a good solution. This means that for train-freeze-infer scenarios (where inference might dominate the cost of deep learning), training larger networks then pruning them down to size could work to maximize efficiency. It also highlights the interesting interplay between optimization & model capacity - I would often try to separate them in my mind, but results like this show that they are strongly intertwined (so the ability of the model to fit the data isn't really relevant without also considering the ability of the optimizer & model combined to find a solution to fit the data).
+
+- Most results seemed to prune weights, not units (which could hurt SIMD compute) - are similar results achievable by pruning entire units?
+- Does this work for RNNs (I can see no reason why not)?
+- Could these findings be used to design smarter initialization procedures?
+  - Here, it might interact with transfer learning, to give us much faster training for new problems.
+- More research needed in different ways to prune trained networks? (One-shot & iterative schemes are good, but maybe we could do more.)
+- Could pruning in regular intervals be used to speed up training?
+
+
 **Sensitivity and Generalization in Neural Networks: An Empirical Study**
 
 - Date revised: 2018-02-23
