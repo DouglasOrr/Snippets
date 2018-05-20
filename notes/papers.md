@@ -3,6 +3,25 @@
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
 
+**Deep Learning Scaling is Predictable, Empirically**
+
+- Date revised: 2017-12-01
+- Date read: 2018-05-20
+- Link: https://arxiv.org/abs/1712.00409
+- Topics: deep learning, model capacity, generalization
+
+This paper uses a broad run of experiments across multiple domains to estimate how model performance scales with dataset size. They run the same hyperparameter search experiment for selected model architectures & optimizers for machine translation, language modelling, image classification & speech recognition. They measure _generalization error_ and _minimum optimal model size_ when the training set is restricted over a broad range, producing _learning curves_ for both (a learning curve here is distinct from our usual _training curve_ which measures a single model evolving over a training run, instead measuring scaling of given metrics for various dataset sizes). Their results show a stable pattern - a power law distribution for generalization error & minimum optimal model size. However the power law exponent for generalization is considerably smaller than that predicted by current theory (which would predict an exponent of -0.5 or -1.0): their experiments show exponents of -0.07 (language modelling) to -0.35 (image classification). This means the curve is flatter - increasing dataset size does not aid performance as much as our theory (under numerous assumptions) predicts, particularly for language modelling. The power law exponent for minimum optimal model size is typically larger (0.5 to 0.7), so optimal model size scales sublinearly with dataset size. They suggest that there are three regions in the learning curve for a problem: first, a _small data region_, where the error metric is defined by random guesswork, second a _power-law region_ (with a problem/dataset-specific exponent) as the dataset grows, then an _irreducible error region_ at which point the problem is "solved" as best it can, and increases in dataset size cease to help the model. They also suggest that architecture & optimizer choice tends to affect the intercept, rather than the exponent of the power law region. For language modelling in particular, it could be very beneficial if we could improve the exponent.
+
+- Could a wider array of architecture choices actually affect the exponent? (E.g. shallow vs deep)
+- Does the small data region really exist - or is this just a bad region for deep learning in particular?
+  - Why should scaling be poor (a flatter curve) here?
+  - It "feels" like Bayesian nonparametric methods could be powerful here.
+- Could you ever prove that you're operating in the irreducible error region?
+  - (You find an upper bound on it whenever you successfully train a model.)
+- Language modelling scales badly, which is somewhat understood in the ngram world (a sparsity problem) - is this the same thing?
+- Could we compare scaling on a given dataset (different objectives) to scaling on a different objective (same dataset) - which affects the exponent more?
+
+
 **The Lottery Ticket Hypothesis: Training Pruned Neural Network Architectures**
 
 - Date revised: 2018-04-23
