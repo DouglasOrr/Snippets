@@ -3,6 +3,24 @@
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
 
+**Routing Networks: Adaptive Selection of Non-linear Functions for Multi-Task Learning**
+
+- Date revised: 2017-12-31
+- Date read: 2018-05-21
+- Link: https://arxiv.org/abs/1711.01239
+- Topics: deep learning, multi-task, reinforcement learning
+
+This paper introduces a flexible architecture for _multi-task learning_ (_MTL_), where routing networks select a sequence of computation _blocks_ (neural networks) to execute, given a one-of-many task label. In the proposed & best implementation tested, the routing networks define a stochastic policy which makes a hard decision of a single network to forward-propagate. The gradient update is then a modified version of _REINFORCE_, called the _Weighted Policy Learner_ (_WPL_), which appears to be simply the REINFORCE gradient, but scaled by `1 - action_probability`  or `action_probability`, depending on whether the reward is greater or less than the historical average reward (respectively). This is a dampening effect on oscilations (which helps when training against a nonstationary objective, such as this one).
+
+- I'm a little unfamiliar with MTL, but it sounds like a interesting area with lots of possibilities.
+- Tasks seem to be small & each multi-task scenario seems to inhabit a relatively restricted domain.
+  - Is it possible to do multi-task learning across all the different settings in the paper (MNIST, imagenet, CIFAR-100)?
+- Shouldn't the baseline for multi-task learning systems be (well-regularized) single task learners?
+  - Is the goal of MTL to reduce training time, help generalization, or both?
+- No form of _fairness_ regularization was needed to encourage diversity (maybe because the routing decision is actually quite easy)?
+  - In fact, the opposite was used, which seems counter-intuitive.
+
+
 **Deep Learning Scaling is Predictable, Empirically**
 
 - Date revised: 2017-12-01
