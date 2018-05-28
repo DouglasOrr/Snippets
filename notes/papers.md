@@ -2,6 +2,22 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+**Deep Models Under the GAN: Information Leakage from Collaborative Deep Learning**
+
+- Date revised: 2017-09-14
+- Date read: 2018-05-28
+- Link: https://arxiv.org/abs/1702.07464
+- Topics: deep learning, collaborative learning, privacy
+
+This paper describes & demonstrates an attack on _collaborative deep learning_, an approach that is intended to improve privacy, but might actually make it worse. In collaborative deep learning, participants train local models & share subsets of their parameters with the server, which are distributed to other participants. Their attack describes an _active participant attacker_, who uses a GAN to generate a "fake class" that is as close as possible to the class being attacked. This encourages the victim to reveal more and more information about the target class as training progresses, which is used to improve the GAN, which ends up generating very good samples from the target class. Others have proposed using _differential privacy_ (DP) on the parameter syncs to improve privacy, but the authors can demonstrate that this attack works even when differential privacy is enabled (as it just depends on is the ability of the model to distinguish between the fake class & the actual one - if you increase DP to remove this effect, you have suppressed any collaborative learning).
+
+- Does this always leak a per-user-per-class distribution, or (if the parameter server aggregates uploads) does it only leak per-class distribution?
+- Is it only the one-shot nature of centralized (trusted server) learning that protects it against this attack?
+  - It seems that in any case where you have a chance to inject data & to perform multiple iterations, you could train such a GAN.
+- Can we find a way to separate out "facts" or "propositions" about our data distributions that are protected by privacy guarantees, but otherwise maximally benefit from large-data ML?
+  - It would be easy (although limited) to do this for manual feature engineering or selective data sharing, but are there other techniques?
+  - Or are most markets largely satisfied with a trusted-server model?
+
 
 **Routing Networks: Adaptive Selection of Non-linear Functions for Multi-Task Learning**
 
