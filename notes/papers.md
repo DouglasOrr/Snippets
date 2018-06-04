@@ -2,6 +2,24 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+**Deep Learning with Differential Privacy**
+
+- Date revised: 2016-10-24
+- Date read: 2018-05-31
+- Link: https://arxiv.org/abs/1607.00133
+- Topics: deep learning, privacy
+
+This paper employs _differential privacy_ to train a deep learning model, applying noise to the gradients used in parameter updates, and introducing a _moments privacy accountant_ which keeps track of the privacy guarantee provided. Colloquially, the differential privacy guarantee offered seems to be "the inclusion of a single datapoint cannot make an observable change in the probability of a derived classification of more than `exp^{epsilon} * probability_without_point + delta`" (the privacy guarantee being specified by _epsilon_ & _delta_). In the case of a continuous observation (the deep learning parameters), this can be achieved by adding Gaussian noise to the data as it is aggregated, in this case into the gradient updates. The accountant keeps track of how effectively the noise is protecting privacy, and provides upper bounds for (epsilon, delta) as training progresses. The moments accountant bound is computed using log moments of privacy loss, and provides a better bound on (epsilon, delta) than the strong composition theorem. To roll this into a training algorithm, there are two pieces - one performs gradient clipping on individual sample parameter gradients, and adds noise. The second keeps track of the privacy "spent" during training using the moments accountant (this provides auxilliary output, perhaps to be used for early stopping, and is not fed back into parameter updates). The paper makes a few observations from experiments - one that differential privacy noise causes generalization rather than overfitting (unsurprisingly, as an overfitted model is almost certainly violating D.P.) Counter-intuitively, larger batches are bad for differential privacy - more epochs can be run with small batches than large ones. In both MNIST & CIFAR-10 experiments there is a cost to employing differential privacy - a reduction in accuracy of the classifier.
+
+- The technique seems very simple (additive Gaussian noise), but the analysis is hard!
+  - However tracking per-example gradients (needed for clipping) is slightly awkward.
+- How would this apply in other contexts?
+  - Would this be scalable to language modelling (e.g. would sparse updates cause a problem)?
+  - Does this assume that the output after every batch is public (which would seem pessimistic)?
+  - I presume for a model with only public outputs (not public parameters) this could be cheaper?
+- As noise is added independently to each parameter gradient, could there be correlations between parameter gradients that leak privacy?
+
+
 **Deep Models Under the GAN: Information Leakage from Collaborative Deep Learning**
 
 - Date revised: 2017-09-14
