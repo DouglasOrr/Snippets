@@ -2,6 +2,22 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+**Differential Privacy**
+
+- Date revised: 2006-07
+- Date read: 2018-06-05
+- Link: https://www.microsoft.com/en-us/research/publication/differential-privacy/
+- Topics: privacy, databases
+
+This paper shows that a privacy property that you would intuitively want is impossible, and introduces the concept of _differential privacy_, which is weaker yet achievable. The impossible property is (colloquially) that access to a database adds no information about an individual versus no access to the database. This is unachievable given two very basic conditions: the requirement for _utility_ - the database must tell you something about the population it represents, and the possibility of _side channels_ which are available to an attacker to give partial information about individuals. For example if a database reports the mean salary of a large population and the side channel tells you that Anna's salary is 20% above the mean, access to the database does add information about an individual. The paper develops a formal proof that shows this privacy goal is impossible to achieve. To replace this, the paper introduces differential privacy, which guarantees that there is no test of results that changes in probability by a factor of more than `exp^{epsilon}` based on the presence of a single individual in the database. This limits the amount of information that can be leaked about an individual based on the value of _epsilon_. It also constructs a mechanism to achieve this - adding exponential noise to a continuous quantity.
+
+- DP seems to be a simple core concept, but with lots of possible extensions & applications.
+- Is this privacy requirement still too strong, in some cases?
+  - What if we're not worried about releasing certain information about an individual?
+  - Is non-detectability a stronger requirement than "no information gain about an individual"?
+    - E.g. if you knew 1000 pieces of information about an individual, you may be able to tell they're in the database, but not gain any new information about them?
+
+
 **Deep Learning with Differential Privacy**
 
 - Date revised: 2016-10-24
