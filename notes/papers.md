@@ -2,6 +2,20 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+**CryptoDL: Deep Neural Networks over Encrypted Data**
+
+- Date revised: 2017-11-14
+- Date read: 2018-06-06
+- Link: https://arxiv.org/abs/1711.05189
+- Topics: deep learning, secure computation, privacy
+
+This paper explains how to use _levelled homomorphic encryption (HE)_ (a more limited but efficient version of _fully homomorphic encryption_) to perform inference on encrypted data in a deep learning model. This would allow a client to send a query to a server without having to trust the server (by virtue of the encryption scheme). It doesn't directly address any training data privacy issues. The challenge with this is expressing the deep learning computation in terms of a limited number of integer multiplications & additions (which means, in particular, approximating elementwise nonlinearities by low-order polynomials). The proposed system is reasonably efficient and accurate (although there is a penalty from using homomorphic encryption - slower, less accurate & more data transfer.) The paper doesn't explain how HE is executed, just how to map deep learning (CNNs) to an operation that supports it. The main contribution is polynomial approximations of standard nonlinearities, which allows levelled HE.
+
+- Is it worth the cost? If it is much slower to do an encrypted compute, isn't local (/embedded) compute more attractive?
+- What if the same nonlinearity (low-order polynomial) is used during training - are better ReLU/Tanh approximations still better?
+- Could this apply to sparse input (such as language data) - how would HE handle that?
+
+
 **Differential Privacy**
 
 - Date revised: 2006-07
