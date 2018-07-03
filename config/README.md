@@ -11,13 +11,15 @@
    - `net-tools`
    - `powertop`
    - `jq`
-   - `docker-ce` (install repository first)
-   - `compizconfig-settings-manager`
-   - `compiz-plugins` (so we can change the app switcher)
+   - `fonts-inconsolata`
+   - `python3-pip`
+   - `docker-ce` (follow: https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+   - Gnome
+     - `gnome-tweak-tool`
+   - Unity
+     - `compizconfig-settings-manager`
+     - `compiz-plugins` (so we can change the app switcher)
  - Copy config from this project
-   - `sudo cp -r bin /opt/bin`
+   - `sudo cp bin/* /usr/local/bin` (you might want to be specific)
    - `cp .emacs .gitconfig ~`
    - Manually merge `.bashrc`
- - Install pip
-   - `wget https://bootstrap.pypa.io/get-pip.py`
-   - `python3 get-pip.py --user`

@@ -2,9 +2,10 @@
 
 alias gs="git s"
 alias gl="git l"
+alias gd="git diff"
 alias gp="git pull"
 
-export PATH=${PATH}:/opt/bin:~/bin:~/.local/bin
+export PATH=${PATH}:~/.local/bin
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US:en
 export LC_ALL=en_US.UTF-8
