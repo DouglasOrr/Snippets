@@ -10,12 +10,14 @@
    - `bmon`
    - `net-tools`
    - `powertop`
+   - `mosh`
    - `jq`
    - `fonts-inconsolata`
    - `python3-pip`
    - `docker-ce` (follow: https://docs.docker.com/install/linux/docker-ce/ubuntu/)
    - Gnome
      - `gnome-tweak-tool`
+     - `dconf-editor`
    - Unity
      - `compizconfig-settings-manager`
      - `compiz-plugins` (so we can change the app switcher)
@@ -23,3 +25,10 @@
    - `sudo cp bin/* /usr/local/bin` (you might want to be specific)
    - `cp .emacs .gitconfig ~`
    - Manually merge `.bashrc`
+ - Configure desktop
+   - Gnome
+     - `gsettings set org.gnome.shell.app-switcher current-workspace-only true`
+     - Use `dconf-editor` to change `<Alt>Tab` from `switch-applications` to `cycle-windows`
+       (and similar for `<Alt><Shift>Tab`)
+   - Unity
+     - Use `compizconfig-settings-manager` to select the static app switcher
