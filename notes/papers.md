@@ -2,6 +2,22 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+**Learning Sparse Neural Networks Through L0 Regularization**
+
+- Date revised: 2018-06-22
+- Date read: 2018-10-04
+- Link: https://arxiv.org/abs/1712.01312
+- Topics: deep learning, sparsity, optimization
+
+This paper describes a technique for minimizing a loss function which includes the (non-differentiable) _L0 norm_ (applied to parameters or groups of parameters). L0 norm makes more sense than L1 or L2 for introducing sparsity, as it often produces exact zeros (like L1), but does not penalize large values (as the only thing that matters for sparsity is the presence of exact zeros - the scale of parameters does not matter). They create a binary gate on each parameter to "switch it off", then relax it to a continuous stochastic gate based on the _hard concrete distribution_ which permits a reparameterization in terms of a differentiable function and parameterless noise function (the _reparameterization trick_), permitting standard gradient-based optimization. The randomness smooths out the hard nonlinearity in expectation, which allows the optimizer to effectively tune the parameters, without losing the exact zeros.
+
+- It's a good idea to consider applying regularization like this to groups of parameters rather than individual ones - I would like to see a performance comparison "regular sparsity" vs "irregular sparsity".
+- L0 seems much more consistent (than L1+) with the "real cost" of a parameter in a sparse model.
+- The hard concrete distribution introduces spikes at 0 and 1, but in this case the spike at 1 seems unnecessary - ultimately we only care if the gate is exactly zero (so the parameter can be pruned).
+- Is this similar to a straight-through estimator that matches the gradient of the expected value of the gate?
+- I'm interested to see other ways in which randomness & the reparameterization trick can be used to relax discrete optimization problems in deep learning.
+
+
 **CryptoDL: Deep Neural Networks over Encrypted Data**
 
 - Date revised: 2017-11-14
