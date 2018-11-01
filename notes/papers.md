@@ -2,7 +2,7 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
-**Backpropagation through the Void: Optimizing control variates for black-box gradient estimation""
+**Backpropagation through the Void: Optimizing control variates for black-box gradient estimation**
 
 - Date revised: 2018-02-23
 - Date read: 2018-10-30
