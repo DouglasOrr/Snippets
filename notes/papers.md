@@ -2,6 +2,19 @@
 
 Note that all of the following are my own take on the paper, and may represent a misunderstanding or misrepresentation - read with caution...
 
+**Backpropagation through the Void: Optimizing control variates for black-box gradient estimation""
+
+- Date revised: 2018-02-23
+- Date read: 2018-10-30
+- Link: https://arxiv.org/abs/1711.00123
+- Topics: deep learning, gradient estimation, optimization
+
+This paper constructs a new estimator for the gradient of the expectation over some distribution of a non-differentiable function value. Their estimator (RE)LAX is based on the REINFORCE estimator and reparameterization trick. The REINFORCE estimator is simple but high-variance, so the goal of RELAX is to reduce the variance. To estimate the variance of a target function, first choose a control variate function "c", which is used like a baseline in actor-critic networs - subtracted from the target function to reduce its variance, and the reparametrization estimator of "c" is added back on (to compensate for any bias). Instead of training the control variate separately (as per actor-critic), it is trained to directly minimize the variance of the estimator. They show how their reduced variance results in faster convergence for some small VAE & RL tasks.
+
+- It is interesting to see that a function that is for the sole purpose of gradient estimation can be trained concurrently with the function it is helping optimize.
+- This shows some of the power of reparameterization to create differentiable stochastic functions.
+
+
 **Learning Sparse Neural Networks Through L0 Regularization**
 
 - Date revised: 2018-06-22
