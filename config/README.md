@@ -23,7 +23,7 @@
      - `compiz-plugins` (so we can change the app switcher)
  - Copy config from this project
    - `sudo cp bin/* /usr/local/bin` (you might want to be specific)
-   - `cp .emacs .gitconfig ~`
+   - `cp .emacs .gitconfig ~` (Or simply `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.emacs -qO ~/.emacs && wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.gitconfig -qO ~/.gitconfig`)
    - Manually merge `.bashrc`
  - Configure desktop
    - Gnome
