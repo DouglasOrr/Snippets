@@ -1,10 +1,17 @@
-[core]
-	editor = emacs
 [user]
-	email = douglas.orr99@gmail.com
-	name = Douglas Orr
-[alias]
-	s = status -sb
-	l = log --oneline --decorate
+        email = douglas.orr99@gmail.com
+        name = Douglas Orr
+[core]
+        editor = emacs
+[merge]
+        conflictstyle = diff3
 [push]
-	default = simple
+        default = simple
+[alias]
+        s = status -sb
+        l = log --oneline --decorate
+        tree = log --graph --oneline --all --decorate
+        unpushed = log --branches --not --remotes
+        untracked = ls-files . --exclude-standard --others
+        ignored = ls-files . --ignored --exclude-standard --others
+        head = log -1 --pretty=format:"%h"
