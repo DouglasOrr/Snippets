@@ -22,8 +22,12 @@
      - `compizconfig-settings-manager`
      - `compiz-plugins` (so we can change the app switcher)
  - Copy config from this project
+   - `cp .emacs .gitconfig ~`
+     - or: `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.emacs -qO ~/.emacs`
+     - and: `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.gitconfig -qO ~/.gitconfig`
+   - `cp flake8 ~/.config/`
+     - or: `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/flake8 -qO ~/.config/flake8`
    - `sudo cp bin/* /usr/local/bin` (you might want to be specific)
-   - `cp .emacs .gitconfig ~` (Or simply `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.emacs -qO ~/.emacs && wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.gitconfig -qO ~/.gitconfig`)
    - Manually merge `.bashrc`
  - Configure desktop
    - Gnome
