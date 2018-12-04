@@ -13,3 +13,6 @@
 
 (require 'flycheck)
 (global-flycheck-mode)
+(setq flycheck-python-pycompile-executable "python3")
+(setq flycheck-python-flake8-executable "flake8")
+(setq flycheck-python-pylint-executable "pylint")
