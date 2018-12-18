@@ -6,6 +6,8 @@
       `((".*" ,temporary-file-directory t)))
 
 (setq-default indent-tabs-mode nil)
+(setq-default c-basic-offset 4)
+(setq-default tab-width 4)
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
