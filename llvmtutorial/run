@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import subprocess
+
+
+def sh(fmt, **args):
+    if subprocess.call(fmt.format(**args), shell=True):
+        exit(1)
+
+
+IMAGE = 'llvmtutorial'
+
+
+def build_image():
+    sh('docker build --rm -t {image} .', image=IMAGE)
+
+
+def run(command):
+    sh('docker run --rm -it -w /work -v `pwd`:/work {image} {cmd}',
+       image=IMAGE,
+       cmd=' '.join(command))
+
+
+def build():
+    os.makedirs('build', exist_ok=True)
+    run(['clang++ -Wall -Wextra -Werror kaleidoscope.cpp -o build/kaleidoscope'])
+    run(['bash -c "build/kaleidoscope < example.k"'])
+
+
+parser = argparse.ArgumentParser(description="Runner script for LLVM-tutorial")
+subparsers = parser.add_subparsers()
+
+subparsers.add_parser('build-image').set_defaults(action=build_image)
+
+p = subparsers.add_parser('run')
+p.add_argument('command', nargs='*')
+p.set_defaults(action=run)
+
+subparsers.add_parser('build').set_defaults(action=build)
+
+args = vars(parser.parse_args())
+action = args.pop('action')
+action(**args)
