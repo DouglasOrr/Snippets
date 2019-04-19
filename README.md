@@ -26,6 +26,8 @@ Various little bits of code that I don't want to lose.
 | [sillygo](sillygo) | ✗ | AI & simulator for the game of Go |
 | [mbtai](mbtai) | ✗ | AI & simulator for the a tank driving game |
 | [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
+| [llvmtutorial](llvmtutorial) | ✗ | Following the LLVM language tutorial |
+| [wold](wold) | ✗ | Little programming language |
 
 ## Other
 
