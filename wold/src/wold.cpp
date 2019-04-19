@@ -9,4 +9,9 @@ namespace wold {
     return 42;
   }
 
+  float bar() {
+    auto x = 5;
+    return x * x;
+  }
+
 } // namespace wold

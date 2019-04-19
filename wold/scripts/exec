@@ -1,1 +1,3 @@
-docker run --rm -it -w /work -v `pwd`:/work wold $@
+if [ -t 0 ] ; then TTY="-t"; else TTY=""; fi
+
+docker run --rm -i ${TTY} -v `pwd`:/work -w /work wold $@

@@ -35,19 +35,20 @@ def generate(build_file, release):
         n.variable('cxx', 'clang++')
         n.variable('cxxflags',
                    '-c -fpic -Wall -Wextra -Werror -std=c++17 {variant_flags} {include_flags}'.format(
-                       variant_flags='-O3 -mtune=native' if release else '-O0 -g',
+                       variant_flags='-O3 -mtune=native' if release else '-O0 -g -fprofile-instr-generate -fcoverage-mapping', # --coverage
                        include_flags=' '.join([
                            '-isystem {}'.format(os.environ['CATCH_HOME']),
                            '-isystem {}'.format(os.environ['BOOST_HOME']),
                            '-isystem {}/include'.format(os.environ['LLVM_HOME']),
                        ]),
                    ))
-        n.variable('linkflags', '-Wl,--no-undefined')
+        n.variable('linkflags', '-Wl,--no-undefined {variant_flags}'.format(
+            variant_flags=' -fprofile-instr-generate -fcoverage-mapping'))#'' if release else '--coverage'))
         n.variable('libs', '-L{}/lib -lLLVM-8'.format(os.environ['LLVM_HOME']))
 
         n.rule('cxx', '$cxx $cxxflags $in -MMD -MF $out.d -o $out', depfile='$out.d', deps='gcc')
         n.rule('link', '$cxx $linkflags $in -o $out $libs')
-        n.rule('ar', 'ar rs $out $in')
+        n.rule('ar', 'rm -f $out && ar crs $out $in')
 
         # Main build
 
@@ -79,12 +80,13 @@ def build(targets, **generate_args):
 def test(**generate_args):
     build(['build/tests'], **generate_args)
     print('### Testing...')
-    sh('./build/tests')
+    sh('env LLVM_PROFILE_FILE=build/tests.profraw ./build/tests')
+    sh('llvm-profdata merge -sparse build/tests.profraw -o build/tests.profdata')
+    sh('llvm-cov report --instr-profile=build/tests.profdata ./build/tests')
 
 
 def clean(**generate_args):
-    generate(**generate_args)
-    sh('ninja -t clean')
+    sh('rm -rf build')
 
 
 # CLI
