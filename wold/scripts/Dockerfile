@@ -29,6 +29,8 @@ RUN apt-get update \
        llvm-8-tools \
     && pip3 install ninja
 
+RUN pip3 install inotify
+
 # Other environment setup
 
 ENV LLVM_HOME=/usr/lib/llvm-8 \

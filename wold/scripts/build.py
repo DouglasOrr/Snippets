@@ -4,6 +4,8 @@ import glob
 import os
 import subprocess
 
+import inotify.adapters
+import inotify.constants
 import ninja
 
 
@@ -19,23 +21,23 @@ def stripext(f):
 
 
 def sh(cmd, **args):
-    code = subprocess.call(cmd.format(**args), shell=True)
-    if code:
-        exit(code)
+    subprocess.check_call(cmd.format(**args), shell=True)
 
 
 # Commands
 
 def generate(build_file, release):
-    print('### Generating...')
     with open(build_file, 'w') as f, \
             contextlib.closing(ninja.Writer(f, width=120)) as n:
         n.variable('builddir', 'build')
         n.variable('projectdir', '.')
         n.variable('cxx', 'clang++')
         n.variable('cxxflags',
-                   '-c -fpic -Wall -Wextra -Werror -std=c++17 {variant_flags} {include_flags}'.format(
-                       variant_flags='-O3 -mtune=native' if release else '-O0 -g -fprofile-instr-generate -fcoverage-mapping', # --coverage
+                   '-c -fcolor-diagnostics -fpic -Wall -Wextra -Werror -std=c++17'
+                   ' {variant_flags} {include_flags}'.format(
+                       variant_flags=('-O3 -mtune=native'
+                                      if release else
+                                      '-O0 -g -fprofile-instr-generate -fcoverage-mapping'),
                        include_flags=' '.join([
                            '-isystem {}'.format(os.environ['CATCH_HOME']),
                            '-isystem {}'.format(os.environ['BOOST_HOME']),
@@ -43,7 +45,7 @@ def generate(build_file, release):
                        ]),
                    ))
         n.variable('linkflags', '-Wl,--no-undefined {variant_flags}'.format(
-            variant_flags=' -fprofile-instr-generate -fcoverage-mapping'))#'' if release else '--coverage'))
+            variant_flags='' if release else '-fprofile-instr-generate -fcoverage-mapping'))
         n.variable('libs', '-L{}/lib -lLLVM-8'.format(os.environ['LLVM_HOME']))
 
         n.rule('cxx', '$cxx $cxxflags $in -MMD -MF $out.d -o $out', depfile='$out.d', deps='gcc')
@@ -70,19 +72,31 @@ def generate(build_file, release):
 
 def build(targets, **generate_args):
     generate(**generate_args)
-    print('### Building...')
     sh('ninja {targets}', targets=' '.join(targets))
     # Make sure we can easily view the built files
     sh('find build -type d -exec chmod ugo+rx {{}} +')
     sh('find build -type f -exec chmod ugo+r {{}} +')
 
 
-def test(**generate_args):
-    build(['build/tests'], **generate_args)
-    print('### Testing...')
-    sh('env LLVM_PROFILE_FILE=build/tests.profraw ./build/tests')
-    sh('llvm-profdata merge -sparse build/tests.profraw -o build/tests.profdata')
-    sh('llvm-cov report --instr-profile=build/tests.profdata ./build/tests')
+def test(coverage, watch, **generate_args):
+    def execute():
+        build(['build/tests'], **generate_args)
+        sh('env LLVM_PROFILE_FILE=build/tests.profraw ./build/tests')
+        if coverage:
+            sh('llvm-profdata merge -sparse build/tests.profraw -o build/tests.profdata')
+            sh('llvm-cov report --instr-profile=build/tests.profdata ./build/tests')
+
+    execute()
+    if watch:
+        print('### Watching for changes to src/ ...')
+        notify = inotify.adapters.InotifyTree('src', inotify.constants.IN_CLOSE_WRITE)
+        for event, flags, dirname, filename in notify.event_gen(yield_nones=False):
+            if not filename.startswith('.#'):
+                try:
+                    print('### Rebuilding...')
+                    execute()
+                except subprocess.CalledProcessError as e:
+                    pass  # ...and carry on rebuilding
 
 
 def clean(**generate_args):
@@ -106,9 +120,17 @@ if __name__ == '__main__':
     p.add_argument('targets', nargs='*', default=[])
     p.set_defaults(action=build)
 
-    subs.add_parser('test').set_defaults(action=test)
+    p = subs.add_parser('test')
+    p.add_argument('-w', '--watch', action='store_true',
+                   help='watch src/ for changes & continuously rebuild')
+    p.add_argument('-C', '--no-coverage', action='store_false', dest='coverage',
+                   help='disable coverage reporting')
+    p.set_defaults(action=test)
 
     subs.add_parser('clean').set_defaults(action=clean)
 
     args = vars(parser.parse_args())
-    args.pop('action')(**args)
+    try:
+        args.pop('action')(**args)
+    except subprocess.CalledProcessError as e:
+        exit(e.returncode)
