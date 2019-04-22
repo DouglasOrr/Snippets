@@ -3,6 +3,7 @@ import contextlib
 import glob
 import os
 import subprocess
+import time
 
 import inotify.adapters
 import inotify.constants
@@ -81,6 +82,7 @@ def build(targets, **generate_args):
 def test(coverage, watch, **generate_args):
     def execute():
         build(['build/tests'], **generate_args)
+        time.sleep(0.1)  # "Text file busy" error
         sh('env LLVM_PROFILE_FILE=build/tests.profraw ./build/tests')
         if coverage:
             sh('llvm-profdata merge -sparse build/tests.profraw -o build/tests.profdata')
