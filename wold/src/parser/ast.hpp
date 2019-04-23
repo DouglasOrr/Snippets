@@ -18,6 +18,7 @@ namespace wold { namespace parser { namespace ast {
       struct infix_expression;
       struct expression : boost::spirit::x3::variant<
         int,
+        identifier,
         boost::spirit::x3::forward_ast<infix_expression>> {
         using base_type::base_type;
         using base_type::operator=;
@@ -43,8 +44,9 @@ BOOST_FUSION_ADAPT_STRUCT(wold::parser::ast::definition,
                           identifier, expression);
 
 namespace wold { namespace parser { namespace ast {
+      ////////////////////////////////////////////////////////////////////////////////
+      // Operator <<
       using boost::fusion::operator<<;
-      using boost::fusion::operator==;
 
       inline std::ostream& operator<<(std::ostream& out, const expression& e) {
         return out << e.get();
@@ -61,6 +63,19 @@ namespace wold { namespace parser { namespace ast {
       // This must come after BOOST_FUSION_ADAPT_STRUCT
       inline std::ostream& operator<<(std::ostream& out, const boost::spirit::x3::forward_ast<infix_expression>& o) {
         return out << o.get();
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // Operator ==
+      using boost::fusion::operator==;
+
+      bool operator==(const expression& left, const expression& right);
+      inline bool operator==(const boost::spirit::x3::forward_ast<infix_expression>& left, const boost::spirit::x3::forward_ast<infix_expression>& right) {
+        return left.get() == right.get();
+      }
+
+      inline bool operator==(const expression& left, const expression& right) {
+        return left.get() == right.get();
       }
 
 }}} // namespace wold::parser::ast

@@ -13,13 +13,11 @@ namespace wold { namespace parser { namespace rules {
       x3::rule<class identifier, ast::identifier> const identifier = "identifier";
       x3::rule<class definition, ast::definition> const definition = "definition";
 
-      x3::rule<class expression, ast::expression> const expression = "expression";
-      x3::rule<class expression_term_add, ast::expression> const expression_term_add = "expression_term_add";
-      x3::rule<class expression_term_mul, ast::expression> const expression_term_mul = "expression_term_mul";
+      x3::rule<class expression, ast::infix_expression> const expression = "expression";
+      x3::rule<class expression_add_term, ast::infix_expression> const expression_add_term = "expression_add_term";
+      x3::rule<class expression_mul_term, ast::expression> const expression_mul_term = "expression_mul_term";
       x3::rule<class add_operator, char> const add_operator = "add_operator";
       x3::rule<class mul_operator, char> const mul_operator = "mul_operator";
-      x3::rule<class infix_expression_add, ast::infix_expression> const infix_expression_add = "infix_expression_add";
-      x3::rule<class infix_expression_mul, ast::infix_expression> const infix_expression_mul = "infix_expression_mul";
 
       // Grammar
       auto const identifier_char =
@@ -33,25 +31,20 @@ namespace wold { namespace parser { namespace rules {
       auto const definition_def = identifier >> "=" >> expression;
 
       auto const expression_def =
-        infix_expression_add | expression_term_add;
+        expression_add_term >> *(add_operator >> expression_add_term);
+      auto const expression_add_term_def =
+        expression_mul_term >> *(mul_operator >> expression_mul_term);
+      auto const expression_mul_term_def =
+        x3::int_ | identifier | ('(' >> expression >> ')');
       auto const add_operator_def =
         x3::char_('+') | x3::char_('-');
-      auto const infix_expression_add_def =
-        expression_term_add >> +(add_operator >> expression_term_add);
-      auto const expression_term_add_def =
-        infix_expression_mul | expression_term_mul;
       auto const mul_operator_def =
         x3::char_('*') | x3::char_('/') | x3::char_('%');
-      auto const infix_expression_mul_def =
-        expression_term_mul >> +(mul_operator >> expression_term_mul);
-      auto const expression_term_mul_def =
-        x3::int_ | ('(' >> expression >> ')');
 
       BOOST_SPIRIT_DEFINE(
         identifier_string, identifier,
-        expression, expression_term_add, expression_term_mul,
+        expression, expression_add_term, expression_mul_term,
         add_operator, mul_operator,
-        infix_expression_mul, infix_expression_add,
         definition);
 
 }}} // namespace wold::parser::rules

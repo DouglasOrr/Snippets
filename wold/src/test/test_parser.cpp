@@ -24,8 +24,21 @@ namespace wold { namespace parser {
     }
 
     TEST_CASE("parse_expression", "[]") {
-      std::cout << parse_all(rules::expression, "1 + 2 + 3 - 4") << "\n";
-      std::cout << parse_all(rules::expression, "1 + 2 * 3 - 4") << "\n";
+      using expr = ast::expression;
+      using infix = ast::infix_expression;
+      REQUIRE(parse_all(rules::expression, "1 + 2 + 3 - 4") ==
+              infix{
+                expr{infix{expr{1}, {}}}, {
+                  {'+', expr{infix{expr{2}, {}}}},
+                  {'+', expr{infix{expr{3}, {}}}},
+                  {'-', expr{infix{expr{4}, {}}}}
+                }});
+      REQUIRE(parse_all(rules::expression, "1 + 2 * 3 - 4") ==
+              infix{
+                expr{infix{expr{1}, {}}}, {
+                  {'+', expr{infix{expr{2}, {{'*', expr{3}}}}}},
+                  {'-', expr{infix{expr{4}, {}}}}
+                }});
     }
 
 }} // namespace wold::parser
