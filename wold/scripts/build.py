@@ -2,6 +2,7 @@ import argparse
 import contextlib
 import glob
 import os
+import re
 import subprocess
 import time
 
@@ -15,6 +16,18 @@ import ninja
 def glob_from(root, pattern):
     return [os.path.relpath(f, root)
             for f in glob.glob(os.path.join(root, pattern), recursive=True)]
+
+
+def find_files(root, include=None, exclude=None):
+    include = include and re.compile(include)
+    exclude = exclude and re.compile(exclude)
+    for dir, _, files in os.walk(root):
+        dir = os.path.relpath(dir, root)
+        for file in files:
+            path = os.path.normpath(os.path.join(dir, file))
+            if (include is None or include.search(path)) \
+               and not (exclude is not None and exclude.search(path)):
+                yield path
 
 
 def stripext(f):
@@ -55,14 +68,15 @@ def generate(build_file, release):
 
         # Main build
 
-        for cpp in glob_from('src', '**/*.cpp'):
+        for cpp in find_files('src', include='.cpp$'):
             n.build('$builddir/obj/{}.o'.format(stripext(cpp)),
                     'cxx',
                     '$projectdir/src/{}'.format(cpp))
 
         n.build('$builddir/libwold.a',
                 'ar',
-                ['$builddir/obj/{}.o'.format(stripext(cpp)) for cpp in glob_from('src', '*.cpp')])
+                ['$builddir/obj/{}.o'.format(stripext(cpp))
+                 for cpp in find_files('src', include='.cpp$', exclude='test/')])
 
         n.build('$builddir/tests',
                 'link',
