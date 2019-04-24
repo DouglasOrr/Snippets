@@ -115,6 +115,11 @@ def test(coverage, watch, **generate_args):
                     pass  # ...and carry on rebuilding
 
 
+def coverage(**generate_args):
+    sh('llvm-cov show --instr-profile=build/tests.profdata ./build/tests')
+    sh('llvm-cov report --instr-profile=build/tests.profdata ./build/tests')
+
+
 def clean(**generate_args):
     sh('rm -rf build')
 
@@ -142,6 +147,8 @@ if __name__ == '__main__':
     p.add_argument('-C', '--no-coverage', action='store_false', dest='coverage',
                    help='disable coverage reporting')
     p.set_defaults(action=test)
+
+    subs.add_parser('coverage').set_defaults(action=coverage)
 
     subs.add_parser('clean').set_defaults(action=clean)
 

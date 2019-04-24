@@ -1,7 +1,6 @@
 #include <catch.hpp>
 #include <iostream>
 #include "../detail/parser.hpp"
-#include "../core/ast.hpp"
 
 namespace wold::parser {
 

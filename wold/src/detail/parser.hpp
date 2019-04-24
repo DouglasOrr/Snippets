@@ -1,7 +1,7 @@
 #ifndef WOLD_DETAIL_PARSER_HPP
 #define WOLD_DETAIL_PARSER_HPP
 
-#include "../core/ast.hpp"
+#include "../ast.hpp"
 
 #include <string>
 #include <vector>
