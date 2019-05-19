@@ -1,0 +1,12 @@
+NAME=hover-notebook
+PORT=7878
+WEBPORT=8765
+
+docker rm -f ${NAME}
+docker run -d -p ${PORT}:${PORT} -p ${WEBPORT}:${WEBPORT} --name ${NAME} -e JUPYTER_ENABLE_LAB=yes \
+       -w /work -v `pwd`:/work -e PYTHONPATH=/work -e GRANT_SUDO=yes \
+       hover \
+       start-notebook.sh --allow-root --port ${PORT}
+sleep 2
+echo "See:"
+echo "  http://localhost:${PORT}/$(docker logs ${NAME} 2>&1 | egrep -o '\?token=.+$' | head -1)"
