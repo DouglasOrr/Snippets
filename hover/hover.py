@@ -1,9 +1,14 @@
+import collections
 import io
+import logging.config
 
 import flask as F
 import Box2D as B
 import numpy as np
 
+
+################################################################################
+# Rendering
 
 class Render:
     @classmethod
@@ -43,27 +48,40 @@ class Render:
         return out.getvalue()
 
 
+################################################################################
+# Core game
+
+State = collections.namedtuple('State', ('x', 'y', 'a', 'dx', 'dy', 'da'))
+
+
 class Game:
-    def __init__(self):
-        self.timestep = 1/30
+    def __init__(self, seed=None):
+        self.timestep = 0.01
         self.thrust = 15
         self.hwidth = 0.4
         self.hheight = 2
+        self.random = np.random.RandomState(seed)
 
         self.world = B.b2World(gravity=(0, -10))
         self.ground = self.world.CreateStaticBody(
             position=[0, -10],
             shapes=B.b2PolygonShape(box=(50, 10)),
         )
-        self.rocket = self.world.CreateDynamicBody(position=[0, 10])
-        self.rocket.CreatePolygonFixture(box=(self.hwidth, self.hheight),
-                                         density=1,
-                                         friction=1)
+        self.rocket = self.world.CreateDynamicBody(
+            position=[0, 15],
+            angle=1.0 * (self.random.rand()-0.5)
+        )
+        self.rocket.CreatePolygonFixture(
+            box=(self.hwidth, self.hheight),
+            density=1,
+            friction=1
+        )
 
     def draw(self):
-        return Render.render([(self.ground, 'black'), (self.rocket, 'blue')],
-                             ((-30, 30), (-1, 29)),
-                             800)
+        return Render.render(
+            [(self.ground, 'black'), (self.rocket, 'blue')],
+            ((-30, 30), (-1, 29)),
+            800)
 
     def _repr_html_(self):
         return self.draw()
@@ -76,9 +94,60 @@ class Game:
             self.rocket.ApplyForce(thrust_v, self.rocket.GetWorldPoint([self.hwidth, -self.hheight]), True)
         self.world.Step(self.timestep, 5, 5)
 
+    @property
+    def state(self):
+        """Returns the State tuple, that describes the rocket."""
+        position = self.rocket.position
+        angle = self.rocket.angle
+        dposition = self.rocket.linearVelocity
+        dangle = self.rocket.angularVelocity
+        return State(position.x, position.y, angle, dposition.x, dposition.y, dangle)
+
+
+def in_bounds(state):
+    return abs(state.x) < 20 and 4 <= state.y < 25 and abs(state.a) < 1.5
+
+
+def single_game_lifetime(agent, max_time):
+    game = Game()
+    max_steps = int(np.ceil(max_time / game.timestep))
+    for step in range(max_steps):
+        state = game.state
+        if not in_bounds(state):
+            return step * game.timestep
+        game.step(*agent(state))
+    return max_steps * game.timestep
+
+
+class IntegratorController:
+    """Turn a continuous controller agent into a PWM discrete agent (suitable for the game)."""
+    def __init__(self, agent):
+        self.agent = agent
+        self._left = 0
+        self._right = 0
+
+    def __call__(self, state):
+        ltarget, rtarget = self.agent(state)
+        self._left += ltarget
+        self._right += rtarget
+        left = (1 <= self._left)
+        right = (1 <= self._right)
+        self._left -= left
+        self._right -= right
+        return left, right
+
+
+def constant_agent(left, right):
+    return lambda state: (left, right)
+
 
 ################################################################################
-# Webapp for playing around
+# Webapp (for playing around)
+
+logging.config.dictConfig(dict(
+    version=1,
+    root=dict(level='INFO')
+))
 
 app = F.Flask(__name__)
 
@@ -102,6 +171,11 @@ def route_game_start():
 def route_game_state():
     if F.request.method == 'POST':
         form = F.request.form
-        app_game.step(form['thrust_left'].lower() == 'true',
-                      form['thrust_right'].lower() == 'true')
-    return F.jsonify(dict(gameid=str(id(app_game)), html=app_game.draw()))
+        left = form['thrust_left'].lower() == 'true'
+        right = form['thrust_right'].lower() == 'true'
+        nticks = max(1, int(form['ticks']))
+        for n in range(nticks):
+            app_game.step(left, right)
+    return F.jsonify(dict(gameid=str(id(app_game)),
+                          state=app_game.state._asdict(),
+                          html=app_game.draw()))

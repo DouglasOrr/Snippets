@@ -1,24 +1,31 @@
 $(function () {
-
-    var timer = null;
+    var frame_rate = 20;
+    var ticks_per_frame = 1;
     var thrust_left = false;
     var thrust_right = false;
 
-    function tick() {
+    window.setInterval(function () {
         $.post("/game/state",
-               {"thrust_left": thrust_left, "thrust_right": thrust_right},
+               {"thrust_left": thrust_left,
+                "thrust_right": thrust_right,
+                "ticks": ticks_per_frame},
                function (response) {
                    $("#viewer").html(response.html);
+                   var state = response.state;
+                   $("#state").text(
+                       " x: " + state.x.toFixed(1) + "\n" +
+                       " y: " + state.y.toFixed(1) + "\n" +
+                       " a: " + state.a.toFixed(1) + "\n" +
+                       "dx: " + state.dx.toFixed(1) + "\n" +
+                       "dy: " + state.dy.toFixed(1) + "\n" +
+                       "da: " + state.da.toFixed(1) + "\n"
+                   );
                });
-    }
+    }, 1000 / frame_rate);
 
     function restart() {
         $.post("/game/start", function (response) {
-            var timestep = response.timestep;
-            if (timer !== null) {
-                window.clearInterval(timer);
-            }
-            timer = window.setInterval(tick, 1000 * timestep);
+            ticks_per_frame = Math.round(1/(frame_rate * response.timestep));
         });
     }
 
