@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import collections
+from dataclasses import dataclass
 import io
 import logging.config
+import typing as T
 
 import flask as F
 import Box2D as B
@@ -11,40 +15,58 @@ import numpy as np
 # Rendering
 
 class Render:
+    @dataclass(frozen=True)
+    class PolygonShape:
+        vertices: T.Tuple[float]
+        color: T.Text
+
+    @dataclass(frozen=True)
+    class Body:
+        x: float
+        y: float
+        angle: float
+        shapes: T.Tuple[PolygonShape]  # pylint: disable=undefined-variable
+
+    @dataclass(frozen=True)
+    class Scene:
+        bodies: T.Tuple[Body]  # pylint: disable=undefined-variable
+        bounds: T.Tuple[float]  # left, right, top, bottom
+        width: int
+
     @classmethod
-    def fixture(cls, fixture, fill, out):
-        out.write('<path fill="{fill}" d="'.format(fill=fill))
-        dx, dy = fixture.shape.vertices[0]
+    def shape(cls, shape, out):
+        out.write('<path fill="{fill}" d="'.format(fill=shape.color))
+        dx, dy = shape.vertices[0]
         out.write('M {} {}'.format(dx, dy))
-        for (dx, dy) in fixture.shape.vertices[1:]:
+        for (dx, dy) in shape.vertices[1:]:
             out.write(' L {} {}'.format(dx, dy))
         out.write('"/>')
 
     @classmethod
-    def body(cls, body, fill, out):
+    def body(cls, body, out):
         out.write('<g transform="translate({x},{y}) rotate({angle})">'.format(
-            angle=body.angle * 180/np.pi, x=body.position.x, y=body.position.y,
+            x=body.x, y=body.y, angle=body.angle * 180/np.pi,
         ))
-        for fixture in body.fixtures:
-            cls.fixture(fixture, fill, out)
+        for shape in body.shapes:
+            cls.shape(shape, out)
         out.write('</g>')
 
     @classmethod
-    def scene(cls, bodies_and_fills, viewbox, width, out):
-        (xmin, xmax), (ymin, ymax) = viewbox
-        height = (ymax-ymin)/(xmax-xmin) * width
+    def scene(cls, scene, out):
+        xmin, xmax, ymin, ymax = scene.bounds
+        height = (ymax-ymin)/(xmax-xmin) * scene.width
         out.write('<svg viewBox="{viewbox}" width="{width}" height="{height}">'.format(
             viewbox='{} {} {} {}'.format(xmin, ymin, xmax-xmin, ymax-ymin),
-            width=width, height=height))
+            width=scene.width, height=height))
         out.write('<g transform="scale(1,-1) translate(0, {dy})">'.format(dy=-(ymax+ymin)))
-        for body, fill in bodies_and_fills:
-            cls.body(body, fill, out)
+        for body in scene.bodies:
+            cls.body(body, out)
         out.write('</g></svg>')
 
     @classmethod
-    def render(cls, bodies_and_fills, viewbox, width):
+    def render(cls, scene):
         out = io.StringIO()
-        cls.scene(bodies_and_fills, viewbox, width, out)
+        cls.scene(scene, out)
         return out.getvalue()
 
 
@@ -72,22 +94,75 @@ class Game:
             position=[0, 15],
             angle=1.0 * (self.random.rand()-0.5)
         )
+        self.control = (False, False)
+        w = self.hwidth
+        h = self.hheight
+        t = 2 * self.hwidth
         self.rocket.CreatePolygonFixture(
-            box=(self.hwidth, self.hheight),
+            vertices=[
+                (-2*w, -h),
+                (2*w, -h),
+                (w, t-h),
+                (-w, t-h),
+            ],
             density=1,
-            friction=1
+            friction=1,
+        )
+        self.rocket.CreatePolygonFixture(
+            vertices=[
+                (-w, t-h),
+                (w, t-h),
+                (w, h-w),
+                (0, h),
+                (-w, h-w),
+            ],
+            density=1,
+            friction=1,
+        )
+        d = 2 * self.hwidth
+        self.left_thruster_shape = Render.PolygonShape(
+            color='orange',
+            vertices=(
+                (-2*w, -h),
+                (-w, -h-d),
+                (0, -h),
+            ))
+        self.right_thruster_shape = Render.PolygonShape(
+            color='orange',
+            vertices=(
+                (0, -h),
+                (w, -h-d),
+                (2*w, -h),
+            ))
+
+    @staticmethod
+    def convert_body(body, color, extra_shapes=()):
+        return Render.Body(
+            x=body.position.x,
+            y=body.position.y,
+            angle=body.angle,
+            shapes=tuple(
+                Render.PolygonShape(vertices=tuple(fixture.shape.vertices), color=color)
+                for fixture in body.fixtures
+            ) + tuple(extra_shapes)
         )
 
     def draw(self):
+        ground = self.convert_body(self.ground, 'black')
+        rocket = self.convert_body(
+            self.rocket, 'blue',
+            ((self.left_thruster_shape,) if self.control[0] else ()) +
+            ((self.right_thruster_shape,) if self.control[1] else ()))
         return Render.render(
-            [(self.ground, 'black'), (self.rocket, 'blue')],
-            ((-30, 30), (-1, 29)),
-            800)
+            Render.Scene(bounds=(-30, 30, -1, 29),
+                         width=800,
+                         bodies=(ground, rocket)))
 
     def _repr_html_(self):
         return self.draw()
 
     def step(self, thrust_left, thrust_right):
+        self.control = (thrust_left, thrust_right)
         thrust_v = self.rocket.GetWorldVector([0, self.rocket.mass * self.thrust])
         if thrust_left:
             self.rocket.ApplyForce(thrust_v, self.rocket.GetWorldPoint([-self.hwidth, -self.hheight]), True)

@@ -5,10 +5,11 @@ RUN apt-get update \
        build-essential \
        ffmpeg \
        libbox2d-dev \
-       python3 \
+       python3.7 \
        python3-pip \
        swig
 
+RUN rm /usr/bin/python3 ; ln -s python3.7 /usr/bin/python3
 COPY requirements.txt /tmp/
 RUN pip3 install -r /tmp/requirements.txt
 
