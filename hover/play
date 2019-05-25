@@ -1,6 +1,0 @@
-PORT=8765
-
-docker run --rm -it -p ${PORT}:${PORT} -v `pwd`:/work -w /work \
-       -e FLASK_APP=hover.py -e FLASK_DEBUG=1 \
-       hover \
-       flask run -h 0.0.0.0 -p ${PORT}

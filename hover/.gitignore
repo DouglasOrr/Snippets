@@ -1,2 +1,6 @@
+*.pyc
+.coverage*
+
 notebooks
+__pycache__
 static/lib

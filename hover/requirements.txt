@@ -1,3 +1,16 @@
 box2d-py
+fastavro
+flake8
+flake8-quotes
 flask
+jupyter
+jupyterlab
+matplotlib
+numpy
+pylint
+pytest
+pytest-cov
+scipy
+seaborn
+tabulate
 torch

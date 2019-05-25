@@ -60,7 +60,8 @@ class Game:
         self.thrust = 15
         self.hwidth = 0.4
         self.hheight = 2
-        self.random = np.random.RandomState(seed)
+        self.random = np.random.RandomState(seed)  # pylint: disable=no-member
+        self.elapsed = 0
 
         self.world = B.b2World(gravity=(0, -10))
         self.ground = self.world.CreateStaticBody(
@@ -93,6 +94,7 @@ class Game:
         if thrust_right:
             self.rocket.ApplyForce(thrust_v, self.rocket.GetWorldPoint([self.hwidth, -self.hheight]), True)
         self.world.Step(self.timestep, 5, 5)
+        self.elapsed += self.timestep
 
     @property
     def state(self):
@@ -151,7 +153,7 @@ logging.config.dictConfig(dict(
 
 app = F.Flask(__name__)
 
-app_game = Game()
+_app_game = Game()
 
 
 @app.route('/')
@@ -161,10 +163,10 @@ def route_index():
 
 @app.route('/game/start', methods=['POST'])
 def route_game_start():
-    global app_game
-    app_game = Game()
-    return F.jsonify(dict(gameid=str(id(app_game)),
-                          timestep=app_game.timestep))
+    global _app_game
+    _app_game = Game()
+    return F.jsonify(dict(gameid=str(id(_app_game)),
+                          timestep=_app_game.timestep))
 
 
 @app.route('/game/state', methods=['GET', 'POST'])
@@ -175,7 +177,7 @@ def route_game_state():
         right = form['thrust_right'].lower() == 'true'
         nticks = max(1, int(form['ticks']))
         for n in range(nticks):
-            app_game.step(left, right)
-    return F.jsonify(dict(gameid=str(id(app_game)),
-                          state=app_game.state._asdict(),
-                          html=app_game.draw()))
+            _app_game.step(left, right)
+    return F.jsonify(dict(gameid=str(id(_app_game)),
+                          state=_app_game.state._asdict(),
+                          html=_app_game.draw()))

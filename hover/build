@@ -1,4 +1,0 @@
-docker build --rm -t hover .
-mkdir -p static/lib
-wget https://code.jquery.com/jquery-3.4.1.min.js -nv -O static/lib/jquery.js
-wget https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css -nv -O static/lib/bootstrap.css
