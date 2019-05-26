@@ -37,7 +37,7 @@ def run(args):
 
 
 def test(filter):
-    docker('pytest *.py {cov_or_filter}',
+    docker('pytest hover {cov_or_filter}',
            cov_or_filter=('-s -k ' + filter
                           if filter else
                           '--cov=hover --no-cov-on-fail --cov-report term-missing'))
@@ -45,14 +45,14 @@ def test(filter):
 
 def check():
     test(filter=None)
-    docker('flake8 hover test_hover run')
-    docker('pylint --errors-only hover test_hover run')
+    docker('flake8 hover run')
+    docker('pylint --errors-only hover run')
 
 
 def play():
     port = 8765
     docker('flask run -h 0.0.0.0 -p {port}',
-           docker_args='-e FLASK_APP=hover.py -p {port}:{port}'.format(port=port),
+           docker_args='-e FLASK_APP=hover -p {port}:{port}'.format(port=port),
            port=port)
 
 

@@ -1,77 +1,12 @@
 from __future__ import annotations
 
 import collections
-from dataclasses import dataclass
-import io
-import logging.config
-import typing as T
 
-import flask as F
 import Box2D as B
 import numpy as np
 
+from . import render
 
-################################################################################
-# Rendering
-
-class Render:
-    @dataclass(frozen=True)
-    class PolygonShape:
-        vertices: T.Tuple[float]
-        color: T.Text
-
-    @dataclass(frozen=True)
-    class Body:
-        x: float
-        y: float
-        angle: float
-        shapes: T.Tuple[PolygonShape]  # pylint: disable=undefined-variable
-
-    @dataclass(frozen=True)
-    class Scene:
-        bodies: T.Tuple[Body]  # pylint: disable=undefined-variable
-        bounds: T.Tuple[float]  # left, right, top, bottom
-        width: int
-
-    @classmethod
-    def shape(cls, shape, out):
-        out.write('<path fill="{fill}" d="'.format(fill=shape.color))
-        dx, dy = shape.vertices[0]
-        out.write('M {} {}'.format(dx, dy))
-        for (dx, dy) in shape.vertices[1:]:
-            out.write(' L {} {}'.format(dx, dy))
-        out.write('"/>')
-
-    @classmethod
-    def body(cls, body, out):
-        out.write('<g transform="translate({x},{y}) rotate({angle})">'.format(
-            x=body.x, y=body.y, angle=body.angle * 180/np.pi,
-        ))
-        for shape in body.shapes:
-            cls.shape(shape, out)
-        out.write('</g>')
-
-    @classmethod
-    def scene(cls, scene, out):
-        xmin, xmax, ymin, ymax = scene.bounds
-        height = (ymax-ymin)/(xmax-xmin) * scene.width
-        out.write('<svg viewBox="{viewbox}" width="{width}" height="{height}">'.format(
-            viewbox='{} {} {} {}'.format(xmin, ymin, xmax-xmin, ymax-ymin),
-            width=scene.width, height=height))
-        out.write('<g transform="scale(1,-1) translate(0, {dy})">'.format(dy=-(ymax+ymin)))
-        for body in scene.bodies:
-            cls.body(body, out)
-        out.write('</g></svg>')
-
-    @classmethod
-    def render(cls, scene):
-        out = io.StringIO()
-        cls.scene(scene, out)
-        return out.getvalue()
-
-
-################################################################################
-# Core game
 
 State = collections.namedtuple('State', ('x', 'y', 'a', 'dx', 'dy', 'da'))
 
@@ -120,14 +55,14 @@ class Game:
             friction=1,
         )
         d = 2 * self.hwidth
-        self.left_thruster_shape = Render.PolygonShape(
+        self.left_thruster_shape = render.PolygonShape(
             color='orange',
             vertices=(
                 (-2*w, -h),
                 (-w, -h-d),
                 (0, -h),
             ))
-        self.right_thruster_shape = Render.PolygonShape(
+        self.right_thruster_shape = render.PolygonShape(
             color='orange',
             vertices=(
                 (0, -h),
@@ -137,12 +72,12 @@ class Game:
 
     @staticmethod
     def convert_body(body, color, extra_shapes=()):
-        return Render.Body(
+        return render.Body(
             x=body.position.x,
             y=body.position.y,
             angle=body.angle,
             shapes=tuple(
-                Render.PolygonShape(vertices=tuple(fixture.shape.vertices), color=color)
+                render.PolygonShape(vertices=tuple(fixture.shape.vertices), color=color)
                 for fixture in body.fixtures
             ) + tuple(extra_shapes)
         )
@@ -153,8 +88,8 @@ class Game:
             self.rocket, 'blue',
             ((self.left_thruster_shape,) if self.control[0] else ()) +
             ((self.right_thruster_shape,) if self.control[1] else ()))
-        return Render.render(
-            Render.Scene(bounds=(-30, 30, -1, 29),
+        return render.draw(
+            render.Scene(bounds=(-30, 30, -1, 29),
                          width=800,
                          bodies=(ground, rocket)))
 
@@ -216,43 +151,3 @@ class IntegratorController:
 
 def constant_agent(left, right):
     return lambda state: (left, right)
-
-
-################################################################################
-# Webapp (for playing around)
-
-logging.config.dictConfig(dict(
-    version=1,
-    root=dict(level='INFO')
-))
-
-app = F.Flask(__name__)
-
-_app_game = Game()
-
-
-@app.route('/')
-def route_index():
-    return F.redirect(F.url_for('static', filename='index.html'))
-
-
-@app.route('/game/start', methods=['POST'])
-def route_game_start():
-    global _app_game
-    _app_game = Game()
-    return F.jsonify(dict(gameid=str(id(_app_game)),
-                          timestep=_app_game.timestep))
-
-
-@app.route('/game/state', methods=['GET', 'POST'])
-def route_game_state():
-    if F.request.method == 'POST':
-        form = F.request.form
-        left = form['thrust_left'].lower() == 'true'
-        right = form['thrust_right'].lower() == 'true'
-        nticks = max(1, int(form['ticks']))
-        for n in range(nticks):
-            _app_game.step(left, right)
-    return F.jsonify(dict(gameid=str(id(_app_game)),
-                          state=_app_game.state._asdict(),
-                          html=_app_game.draw()))
