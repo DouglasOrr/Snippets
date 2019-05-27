@@ -31,7 +31,7 @@ def route_game_state():
         right = form['thrust_right'].lower() == 'true'
         nticks = max(1, int(form['ticks']))
         for n in range(nticks):
-            _game.step(left, right)
+            _game.step((left, right))
     return F.jsonify(dict(gameid=str(id(_game)),
                           state=_game.state._asdict(),
                           html=_game.draw()))
