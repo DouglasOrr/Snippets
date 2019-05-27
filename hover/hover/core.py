@@ -218,11 +218,11 @@ class Report:
                 yield pool.map
 
     @staticmethod
-    def _open_write(path):
+    def _open_write(path, mode='w'):
         parent = os.path.dirname(path)
         if not os.path.isdir(parent):
             os.makedirs(parent)
-        return open(path, 'w')
+        return open(path, mode)
 
     @classmethod
     def about(cls, path, name, kind, **args):
@@ -236,6 +236,11 @@ class Report:
             for result in mapper(cls._evaluate_one, it.repeat(agent, ngames)):
                 json.dump(result, file)
                 file.write('\n')
+
+    @classmethod
+    def agent(cls, path, agent):
+        with cls._open_write(os.path.join(path, 'agent.pkl'), 'wb') as file:
+            T.save(agent, file)
 
     @classmethod
     def load(cls, root):
