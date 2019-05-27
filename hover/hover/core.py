@@ -204,6 +204,9 @@ class Game:
 
 
 class Report:
+    ################################################################################
+    # Saving
+
     @staticmethod
     def _evaluate_one(agent):
         return Game.play(agent).to_json()
@@ -241,6 +244,38 @@ class Report:
     def agent(cls, path, agent):
         with cls._open_write(os.path.join(path, 'agent.pkl'), 'wb') as file:
             T.save(agent, file)
+
+    class Training:
+        def __init__(self, root):
+            self._root = root
+            self._logs = {}
+            self._t0 = time.time()
+            if not os.path.isdir(root):
+                os.makedirs(root)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, type, value, traceback):
+            self.close()
+
+        def close(self):
+            for file in self._logs.values():
+                file.close()
+
+        def append(self, name, **row):
+            if name not in self._logs:
+                self._logs[name] = open(os.path.join(self._root, name + '.jsonl'), 'w')
+            log = self._logs[name]
+            json.dump(dict(t=time.time()-self._t0, **row), log)
+            log.write('\n')
+
+    @classmethod
+    def training(cls, path):
+        return cls.Training(os.path.join(path, 'training'))
+
+    ################################################################################
+    # Loading
 
     @classmethod
     def load(cls, root):

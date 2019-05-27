@@ -46,7 +46,7 @@ def test(filter):
 def check():
     test(filter=None)
     docker('flake8 hover run')
-    docker('pylint --errors-only hover run')
+    docker('pylint --rcfile=setup.cfg --errors-only hover run')
 
 
 def play():

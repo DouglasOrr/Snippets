@@ -1,2 +1,5 @@
-from .core import *  # noqa
-from .web import app  # noqa
+# flake8: noqa
+
+from . import core, qlearning, render, web
+from .core import *
+from .web import app
