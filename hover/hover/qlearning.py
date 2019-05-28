@@ -18,15 +18,16 @@ class Model(T.nn.Module):
 
 
 class Agent:
+    ACTIONS = [(False, False), (False, True), (True, False), (True, True)]
+
     def __init__(self):
         # Fixed state (settings)
         self.discount = .95
         self.ticks_per_action = 10
         self.greed = .9
         self.qsteps = 5
-        self.max_buffer = 1000
+        self.max_buffer = 10000
         self.update_sample = 100
-        self.actions = [(False, False), (False, True), (True, False), (True, True)]
 
         # Transient state
         self.model = Model(100)
@@ -44,7 +45,7 @@ class Agent:
             rewards = T.FloatTensor([self.buffer[idx][2] for idx in indices])
 
             y = self.model(states)[T.arange(self.update_sample), actions]
-            loss = (1 - self.discount) * ((y - rewards) ** 2).sum()
+            loss = (1 - self.discount) * ((y - rewards) ** 2).mean()
             log.append('loss', loss=float(loss))
             loss.backward()
             self.opt.step()
@@ -53,7 +54,7 @@ class Agent:
         if greedy or self.random.rand() < self.greed:
             return int(T.argmax(self.model(T.FloatTensor(state))))
         else:
-            return self.random.randint(len(self.actions))
+            return self.random.randint(len(self.ACTIONS))
 
     def _add_memory(self, state, action, reward, log):
         if self.qsteps == len(self.pre_buffer):
@@ -76,7 +77,7 @@ class Agent:
         while True:
             state = game.state
             action = self._act(state, greedy=False)
-            outcome = game.step_multi(self.actions[action], self.ticks_per_action)
+            outcome = game.step_multi(self.ACTIONS[action], self.ticks_per_action)
             self._add_memory(state, action, outcome is None or outcome.success, log)
             if outcome:
                 self._flush_and_trim_buffer()
@@ -85,4 +86,4 @@ class Agent:
 
     def __call__(self, state):
         """Evaluation policy - greedy as anything."""
-        return self.actions[self._act(state, greedy=True)]
+        return self.ACTIONS[self._act(state, greedy=True)]
