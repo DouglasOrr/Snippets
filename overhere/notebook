@@ -1,0 +1,9 @@
+docker build --rm -t overhere .
+
+docker run --rm -d --name overhere -v `pwd`:/work -w /work -e PYTHONPATH=/work -p 7777:7777 \
+       overhere \
+       jupyter lab --no-browser --allow-root --port 7777
+
+sleep 2
+
+docker logs overhere
