@@ -127,10 +127,15 @@ private:
   b2World m_world;
   b2Body* m_ground;
   b2Body* m_rocket;
+  b2PolygonShape m_rocketThrusterLeft;
+  b2PolygonShape m_rocketThrusterRight;
   uint_fast64_t m_randomSeed;
   std::mt19937_64 m_random;
-  float m_elapsed;
   State::array_bool m_cell;
+
+  float m_elapsed;
+  bool m_actionLeft;
+  bool m_actionRight;
 
   static constexpr auto RocketHWidth = 0.4f;
   static constexpr auto RocketHHeight = 2.0f;
@@ -147,8 +152,10 @@ Runner::Runner(Settings settings)
   : m_world({0.0f, -10.0f}),
     m_randomSeed(settings.seed.value_or(std::chrono::system_clock::now().time_since_epoch().count())),
     m_random(m_randomSeed),
+    m_cell({5, 9}),
     m_elapsed(0),
-    m_cell({5, 9}) {
+    m_actionLeft(false),
+    m_actionRight(false) {
 
   auto groundDef = b2BodyDef();
   groundDef.position = {0, -10};
@@ -184,26 +191,26 @@ Runner::Runner(Settings settings)
   top.Set(topPoints, 5);
   m_rocket->CreateFixture(&top, 1.0f);
 
-  // TODO: save some vertices for drawing the thrusters
-  // left
-  // (-2*w, -h),
-  //   (-w, -h-d),
-  //   (0, -h),
-  // right
-  // (0, -h),
-  //   (w, -h-d),
-  //   (2*w, -h),
+  auto d = 2 * RocketHWidth;
+  b2Vec2 leftPoints[] = {{-2*w, -h},
+                         {-w, -h-d},
+                         {0, -h}};
+  m_rocketThrusterLeft.Set(leftPoints, 3);
+  b2Vec2 rightPoints[] = {{0, -h},
+                          {w, -h-d},
+                          {2*w, -h}};
+  m_rocketThrusterRight.Set(rightPoints, 3);
 }
 
 State Runner::step(const Action& action) {
   const auto thrust = m_rocket->GetWorldVector({0, 15 * m_rocket->GetMass()});
-  const auto actionLeft = *action.data(0);
-  const auto actionRight = *action.data(1);
+  m_actionLeft = *action.data(0);
+  m_actionRight = *action.data(1);
   for (auto sub = 0u; sub < Substeps; ++sub) {
-    if (actionLeft) {
+    if (m_actionLeft) {
       m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({-RocketHWidth, -RocketHHeight}), true);
     }
-    if (actionRight) {
+    if (m_actionRight) {
       m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({RocketHWidth, -RocketHHeight}), true);
     }
     m_world.Step(Timestep / Substeps, 8, 3);
@@ -229,8 +236,62 @@ State Runner::step(const Action& action) {
   return State(outcome, m_randomSeed, 0, m_cell, std::move(shipState));
 }
 
+void beginBody(std::ostream& out, const b2Body& body) {
+  out << "<g transform=\"translate("
+      << body.GetPosition().x << "," << body.GetPosition().y
+      << ") rotate(" << body.GetAngle() << ")\">";
+}
+void endBody(std::ostream& out) {
+  out << "</g>";
+}
+void drawPath(std::ostream& out, const char* fill, const b2Vec2* vertices, int count) {
+  out << "<path fill=\"" << fill << "\" d=\""
+      << "M " << vertices[0].x << ' ' << vertices[0].y;
+  for (auto i = 1; i < count; ++i) {
+    out << " L " << vertices[i].x << ' ' << vertices[i].y;
+  }
+  out << "\"/>";
+}
+void drawFixtures(std::ostream& out, const char* fill, const b2Body& body) {
+  for (auto fixture = body.GetFixtureList(); fixture; fixture = fixture->GetNext()) {
+    auto shape = fixture->GetShape();
+    if (shape->GetType() == b2Shape::e_polygon) {
+      auto polygon = static_cast<const b2PolygonShape*>(shape);
+      drawPath(out, fill, polygon->m_vertices, polygon->m_count);
+    }
+  }
+}
+
 std::string Runner::to_svg() const {
-  return "<b>TODO</b>"; // TODO
+  const auto xmin = -30.f;
+  const auto xmax = 30.f;
+  const auto ymin = -1.f;
+  const auto ymax = 29.f;
+  const auto width = 800u;
+  const auto height = static_cast<unsigned>(width * (ymax - ymin) / (xmax - xmin));
+
+  std::ostringstream str;
+  str << "<svg"
+      << " viewBox=\"" << xmin << ' ' << ymin << ' ' << xmax - xmin << ' ' << ymax - ymin << "\""
+      << " width=\"" << width << "\" height=\"" << height << "\">"
+      << "<g transform=\"scale(1,-1) translate(0," << -(ymax + ymin) << ")\">";
+
+  beginBody(str, *m_rocket);
+  drawFixtures(str, "blue", *m_rocket);
+  if (m_actionLeft) {
+    drawPath(str, "orange", m_rocketThrusterLeft.m_vertices, m_rocketThrusterLeft.m_count);
+  }
+  if (m_actionRight) {
+    drawPath(str, "orange", m_rocketThrusterRight.m_vertices, m_rocketThrusterRight.m_count);
+  }
+  endBody(str);
+
+  beginBody(str, *m_ground);
+  drawFixtures(str, "black", *m_ground);
+  endBody(str);
+
+  str << "</g></svg>";
+  return str.str();
 }
 
 
@@ -238,7 +299,7 @@ std::string Runner::to_svg() const {
 // Python
 
 PYBIND11_MODULE(hover_game, m) {
-  m.doc() = "pybind11 example plugin"; // optional module docstring
+  m.doc() = "hover_game core game logic and rendering";
 
   // State
 
