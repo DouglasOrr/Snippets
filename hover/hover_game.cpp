@@ -120,7 +120,8 @@ struct Runner {
   };
 
   Runner(Settings settings);
-  State step(const Action& action);
+  State state() const;
+  void step(const Action& action);
   std::string to_svg() const;
 
 private:
@@ -202,21 +203,7 @@ Runner::Runner(Settings settings)
   m_rocketThrusterRight.Set(rightPoints, 3);
 }
 
-State Runner::step(const Action& action) {
-  const auto thrust = m_rocket->GetWorldVector({0, 15 * m_rocket->GetMass()});
-  m_actionLeft = *action.data(0);
-  m_actionRight = *action.data(1);
-  for (auto sub = 0u; sub < Substeps; ++sub) {
-    if (m_actionLeft) {
-      m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({-RocketHWidth, -RocketHHeight}), true);
-    }
-    if (m_actionRight) {
-      m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({RocketHWidth, -RocketHHeight}), true);
-    }
-    m_world.Step(Timestep / Substeps, 8, 3);
-  }
-  m_elapsed += Timestep;
-
+State Runner::state() const {
   auto outcome = State::Outcome::Continue;
   if (MaxTime <= m_elapsed) {
     outcome = State::Outcome::Success;
@@ -236,10 +223,26 @@ State Runner::step(const Action& action) {
   return State(outcome, m_randomSeed, 0, m_cell, std::move(shipState));
 }
 
+void Runner::step(const Action& action) {
+  const auto thrust = m_rocket->GetWorldVector({0, 15 * m_rocket->GetMass()});
+  m_actionLeft = *action.data(0);
+  m_actionRight = *action.data(1);
+  for (auto sub = 0u; sub < Substeps; ++sub) {
+    if (m_actionLeft) {
+      m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({-RocketHWidth, -RocketHHeight}), true);
+    }
+    if (m_actionRight) {
+      m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({RocketHWidth, -RocketHHeight}), true);
+    }
+    m_world.Step(Timestep / Substeps, 8, 3);
+  }
+  m_elapsed += Timestep;
+}
+
 void beginBody(std::ostream& out, const b2Body& body) {
   out << "<g transform=\"translate("
       << body.GetPosition().x << "," << body.GetPosition().y
-      << ") rotate(" << body.GetAngle() << ")\">";
+      << ") rotate(" << body.GetAngle() * 180 / M_PI << ")\">";
 }
 void endBody(std::ostream& out) {
   out << "</g>";
@@ -360,6 +363,7 @@ PYBIND11_MODULE(hover_game, m) {
   runner
     .def(py::init<Runner::Settings>())
     .def("step", &Runner::step)
+    .def("state", &Runner::state)
     .def("to_svg", &Runner::to_svg)
     .def("_repr_html_", &Runner::to_svg);
 }
