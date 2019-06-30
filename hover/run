@@ -28,7 +28,7 @@ def docker(cmd, docker_detach=False, docker_args='', **kwargs):
        docker_args=docker_args)
 
 
-def build():
+def build_image():
     sh('docker build --rm -t {image} .', image=IMAGE)
 
 
@@ -36,7 +36,12 @@ def run(args):
     docker(' '.join(args))
 
 
+def build():
+    docker('ninja -f tools/build.ninja')
+
+
 def test(filter):
+    build()
     docker('pytest hover {cov_or_filter}',
            cov_or_filter=('-s -k ' + filter
                           if filter else
@@ -51,6 +56,7 @@ def check():
 
 def play():
     port = 8765
+    build()
     docker('flask run -h 0.0.0.0 -p {port}',
            docker_args='-e FLASK_APP=hover -p {port}:{port}'.format(port=port),
            port=port)
@@ -78,7 +84,9 @@ if __name__ == '__main__':
     parser.set_defaults(action=lambda: parser.print_help())
     subs = parser.add_subparsers()
 
-    subs.add_parser('build', help='build the Docker image').set_defaults(action=build)
+    subs.add_parser('build-image', help='build the Docker image').set_defaults(action=build_image)
+
+    subs.add_parser('build', help='build the C++ Python module').set_defaults(action=build)
 
     p = subs.add_parser('run', help='run an arbitrary command in the image')
     p.add_argument('args', nargs='*', help='command/arguments to pass to the image')

@@ -8,11 +8,19 @@ def test_webapp_home():
     assert 'Hover' in home.data.decode('utf8')
 
 
+def test_static_lib():
+    client = web.app.test_client()
+    for file in ['jquery.js', 'bootstrap.css']:
+        lib = client.get('/static/lib/{}'.format(file))
+        assert lib.status == '200 OK'
+        assert lib.get_data()
+
+
 def test_webapp_game():
     client = web.app.test_client()
     start = client.post('/game/start')
     assert start.status == '200 OK'
-    assert 0 < start.get_json()['timestep'] <= 1
+    assert type(start.get_json()['gameid']) is str
 
     restart = client.post('/game/start')
     assert restart.status == '200 OK'
@@ -24,12 +32,13 @@ def test_webapp_game():
 
     restate = client.get('/game/state')
     assert restate.status == '200 OK'
-    assert state.get_json()['state'] == restate.get_json()['state']
+    assert state.get_json()['ship_state'] == restate.get_json()['ship_state']
+    assert state.get_json()['html'] == restate.get_json()['html']
 
     step = client.post('/game/state', data=dict(
         thrust_left='False',
         thrust_right='True',
-        ticks='10',
     ))
     assert step.status == '200 OK'
-    assert step.get_json()['state'] != state.get_json()['state']
+    assert step.get_json()['ship_state'] != state.get_json()['ship_state']
+    assert step.get_json()['html'] != state.get_json()['html']

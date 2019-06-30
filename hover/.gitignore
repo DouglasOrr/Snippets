@@ -1,7 +1,9 @@
 .coverage*
+.ninja_deps
+.ninja_log
 *.pyc
 *.so
 
 notebooks
+local
 __pycache__
-hover/static/lib

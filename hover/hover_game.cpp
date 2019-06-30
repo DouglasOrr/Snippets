@@ -82,12 +82,12 @@ std::ostream& operator<<(std::ostream& out, const State& state) {
       out << (*state.cell_features.data(i, j) ? '1' : '0');
     }
   }
-  out << "], ship_state=";
+  out << "], ship_state=[";
   for (auto i = 0u; i < state.ship_state.size(); ++i) {
     if (i != 0u) out << ',';
     out << static_cast<float>(*state.ship_state.data(i));
   }
-  return out << ")";
+  return out << "])";
 }
 
 State::State(Outcome outcome_, uint_fast64_t game_seed_, unsigned cell_index_,
@@ -141,7 +141,7 @@ private:
   static constexpr auto RocketHWidth = 0.4f;
   static constexpr auto RocketHHeight = 2.0f;
   static constexpr auto RocketThrust = 15.0f;
-  static constexpr auto Timestep = 0.1f;
+  static constexpr auto Timestep = 0.05f;
   static constexpr auto Substeps = 10u;
   static constexpr auto MaxTime = 20.0f;
 };
