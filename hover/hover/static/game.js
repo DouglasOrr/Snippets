@@ -9,16 +9,6 @@ $(function () {
                 "thrust_right": thrust_right},
                function (response) {
                    $("#viewer").html(response.html);
-                   var state = response.ship_state;
-                   $("#state").text(
-                       // See hover_game.State.Ship
-                       " x: " + state[0].toFixed(1) + "\n" +
-                       " y: " + state[1].toFixed(1) + "\n" +
-                       " a: " + state[2].toFixed(1) + "\n" +
-                       "dx: " + state[3].toFixed(1) + "\n" +
-                       "dy: " + state[4].toFixed(1) + "\n" +
-                       "da: " + state[5].toFixed(1) + "\n"
-                   );
                });
     }, 1000 / frame_rate);
 

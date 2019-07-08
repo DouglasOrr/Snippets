@@ -302,15 +302,18 @@ std::string Runner::to_svg() const {
 // Python
 
 PYBIND11_MODULE(hover_game, m) {
+  using namespace pybind11::literals;  // "arg"_a
+
   m.doc() = "hover_game core game logic and rendering";
 
   // State
 
   auto state = py::class_<State>(m, "State");
   state.def(py::init<State::Outcome, uint_fast64_t, unsigned,
-                     State::array_bool, State::array_float>())
-    .def("get_cell", &State::get_cell)
-    .def("get_ship", &State::get_ship)
+            State::array_bool, State::array_float>(),
+            "outcome"_a, "game_seed"_a, "cell_index"_a, "cell_features"_a, "ship_state"_a)
+    .def("get_cell", &State::get_cell, "relation"_a, "field"_a)
+    .def("get_ship", &State::get_ship, "field"_a)
     .def("__repr__", [] (const State& state) {
         auto out = std::ostringstream();
         out << state;
@@ -356,13 +359,13 @@ PYBIND11_MODULE(hover_game, m) {
   auto runner = py::class_<Runner>(m, "Runner");
 
   py::class_<Runner::Settings>(runner, "Settings")
-    .def(py::init<std::optional<uint_fast64_t>, std::vector<float>>())
+    .def(py::init<std::optional<uint_fast64_t>, std::vector<float>>(), "seed"_a, "difficulty"_a)
     .def_readonly("seed", &Runner::Settings::seed)
     .def_readonly("difficulty", &Runner::Settings::difficulty);
 
   runner
-    .def(py::init<Runner::Settings>())
-    .def("step", &Runner::step)
+    .def(py::init<Runner::Settings>(), "settings"_a)
+    .def("step", &Runner::step, "action"_a)
     .def("state", &Runner::state)
     .def("to_svg", &Runner::to_svg)
     .def("_repr_html_", &Runner::to_svg);

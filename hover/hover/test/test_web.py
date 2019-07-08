@@ -32,7 +32,6 @@ def test_webapp_game():
 
     restate = client.get('/game/state')
     assert restate.status == '200 OK'
-    assert state.get_json()['ship_state'] == restate.get_json()['ship_state']
     assert state.get_json()['html'] == restate.get_json()['html']
 
     step = client.post('/game/state', data=dict(
@@ -40,5 +39,4 @@ def test_webapp_game():
         thrust_right='True',
     ))
     assert step.status == '200 OK'
-    assert step.get_json()['ship_state'] != state.get_json()['ship_state']
     assert step.get_json()['html'] != state.get_json()['html']
