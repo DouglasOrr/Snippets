@@ -1,0 +1,20 @@
+[
+    {
+        "name": "book",
+        "description": "book name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "verse",
+        "description": "chapter and verse reference",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "text",
+        "description": "tokens of text",
+        "type": "STRING",
+        "mode": "REPEATED"
+    }
+]
