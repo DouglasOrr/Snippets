@@ -15,48 +15,27 @@ namespace py = pybind11;
 // State
 
 struct State {
-  enum class CellRelation {
-    Current,
-    Left,
-    Right,
-    Up,
-    Down,
-  };
-
-  enum class Cell {
-    WallLeft,
-    WallRight,
-    WallUp,
-    WallDown,
-    ObjectiveCurrent,
-    ObjectiveLeft,
-    ObjectiveRight,
-    ObjectiveUp,
-    ObjectiveDown
-  };
-
-  enum class Ship {
-    X, Y, A,
-    DX, DY, DA,
-  };
-
   enum class Outcome {
     Continue, Failure, Success
   };
 
-  typedef py::array_t<bool, py::array::c_style | py::array::forcecast> array_bool;
   typedef py::array_t<float, py::array::c_style | py::array::forcecast> array_float;
 
-  Outcome outcome;
-  uint_fast64_t game_seed;
-  unsigned cell_index;
-  array_bool cell_features;
-  array_float ship_state;
+  struct Data {
+    static const unsigned ShipX = 0;
+    static const unsigned ShipY = 1;
+    static const unsigned ShipA = 2;
+    static const unsigned ShipDX = 3;
+    static const unsigned ShipDY = 4;
+    static const unsigned ShipDA = 5;
+    static const unsigned Size = 15; // [Ship.{x, y, a, dx, dy, da}, Wall.{l, r, u, d}, Objective.{c, l, r, u, d}
+  };
 
-  State(Outcome outcome_, uint_fast64_t game_seed_, unsigned cell_index_,
-        array_bool cell_features_, array_float ship_state_);
-  bool get_cell(CellRelation relation, Cell field) const;
-  float get_ship(Ship field) const;
+  Outcome outcome;
+  float progress;
+  array_float data;
+
+  State(Outcome outcome_, float progress_, array_float data_);
 };
 
 std::ostream& operator<<(std::ostream& out, const State::Outcome& outcome) {
@@ -73,38 +52,19 @@ std::ostream& operator<<(std::ostream& out, const State::Outcome& outcome) {
 std::ostream& operator<<(std::ostream& out, const State& state) {
   out << "State("
       << "outcome=" << state.outcome
-      << ", game_seed=" << state.game_seed
-      << ", cell_index=" << state.cell_index
-      << ", cell_features=[";
-  for (auto i = 0u; i < state.cell_features.shape(0); ++i) {
+      << ", progress=" << state.progress
+      << ", data=[";
+  for (auto i = 0u; i < state.data.shape(0); ++i) {
     if (i != 0) out << ',';
-    for (auto j = 0u; j < state.cell_features.shape(1); ++j) {
-      out << (*state.cell_features.data(i, j) ? '1' : '0');
-    }
-  }
-  out << "], ship_state=[";
-  for (auto i = 0u; i < state.ship_state.size(); ++i) {
-    if (i != 0u) out << ',';
-    out << static_cast<float>(*state.ship_state.data(i));
+    out << *state.data.data(i);
   }
   return out << "])";
 }
 
-State::State(Outcome outcome_, uint_fast64_t game_seed_, unsigned cell_index_,
-             array_bool cell_features_, array_float ship_state_)
+State::State(Outcome outcome_, float progress_, array_float data_)
   : outcome(outcome_),
-    game_seed(game_seed_),
-    cell_index(cell_index_),
-    cell_features(std::move(cell_features_)),
-    ship_state(std::move(ship_state_)) { }
-
-bool State::get_cell(CellRelation relation, Cell field) const {
-  return *cell_features.data(relation, field);
-}
-
-float State::get_ship(Ship field) const {
-  return *ship_state.data(field);
-}
+    progress(progress_),
+    data(std::move(data_)) { }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +79,7 @@ struct Runner {
     Settings(std::optional<uint_fast64_t> seed_, std::vector<float> difficulty_);
   };
 
-  Runner(Settings settings);
+  explicit Runner(Settings settings);
   State state() const;
   void step(const Action& action);
   std::string to_svg() const;
@@ -132,7 +92,6 @@ private:
   b2PolygonShape m_rocketThrusterRight;
   uint_fast64_t m_randomSeed;
   std::mt19937_64 m_random;
-  State::array_bool m_cell;
 
   float m_elapsed;
   bool m_actionLeft;
@@ -153,7 +112,6 @@ Runner::Runner(Settings settings)
   : m_world({0.0f, -10.0f}),
     m_randomSeed(settings.seed.value_or(std::chrono::system_clock::now().time_since_epoch().count())),
     m_random(m_randomSeed),
-    m_cell({5, 9}),
     m_elapsed(0),
     m_actionLeft(false),
     m_actionRight(false) {
@@ -213,14 +171,19 @@ State Runner::state() const {
     outcome = State::Outcome::Failure;
   }
 
-  auto shipState = State::array_float(6);
-  *shipState.mutable_data(State::Ship::X) = m_rocket->GetPosition().x;
-  *shipState.mutable_data(State::Ship::Y) = m_rocket->GetPosition().y;
-  *shipState.mutable_data(State::Ship::A) = m_rocket->GetAngle();
-  *shipState.mutable_data(State::Ship::DX) = m_rocket->GetLinearVelocity().x;
-  *shipState.mutable_data(State::Ship::DY) = m_rocket->GetLinearVelocity().y;
-  *shipState.mutable_data(State::Ship::DA) = m_rocket->GetAngularVelocity();
-  return State(outcome, m_randomSeed, 0, m_cell, std::move(shipState));
+  auto data = State::array_float(State::Data::Size);
+  auto d = data.mutable_data();
+  *(d + State::Data::ShipX) = m_rocket->GetPosition().x;
+  *(d + State::Data::ShipY) = m_rocket->GetPosition().y;
+  *(d + State::Data::ShipA) = m_rocket->GetAngle();
+  *(d + State::Data::ShipDX) = m_rocket->GetLinearVelocity().x;
+  *(d + State::Data::ShipDY) = m_rocket->GetLinearVelocity().y;
+  *(d + State::Data::ShipDA) = m_rocket->GetAngularVelocity();
+
+  std::fill(d + State::Data::ShipDA + 1, d + State::Data::Size, 0.0f);  // TODO: cell state data
+
+  auto progress = 0.0f;  // TODO
+  return State(outcome, progress, std::move(data));
 }
 
 void Runner::step(const Action& action) {
@@ -309,50 +272,29 @@ PYBIND11_MODULE(hover_game, m) {
   // State
 
   auto state = py::class_<State>(m, "State");
-  state.def(py::init<State::Outcome, uint_fast64_t, unsigned,
-            State::array_bool, State::array_float>(),
-            "outcome"_a, "game_seed"_a, "cell_index"_a, "cell_features"_a, "ship_state"_a)
-    .def("get_cell", &State::get_cell, "relation"_a, "field"_a)
-    .def("get_ship", &State::get_ship, "field"_a)
+  state.def(py::init<State::Outcome, float, State::array_float>(),
+            "outcome"_a, "progress"_a, "data"_a)
     .def("__repr__", [] (const State& state) {
         auto out = std::ostringstream();
         out << state;
         return out.str();
       })
     .def_readonly("outcome", &State::outcome)
-    .def_readonly("cell_features", &State::cell_features)
-    .def_readonly("ship_state", &State::ship_state);
-
-  py::enum_<State::CellRelation>(state, "CellRelation")
-    .value("Current", State::CellRelation::Current)
-    .value("Left", State::CellRelation::Left)
-    .value("Right", State::CellRelation::Right)
-    .value("Up", State::CellRelation::Up)
-    .value("Down", State::CellRelation::Down);
-
-  py::enum_<State::Cell>(state, "Cell")
-    .value("WallLeft", State::Cell::WallLeft)
-    .value("WallRight", State::Cell::WallRight)
-    .value("WallUp", State::Cell::WallUp)
-    .value("WallDown", State::Cell::WallDown)
-    .value("ObjectivCurrent", State::Cell::ObjectiveCurrent)
-    .value("ObjectiveLeft", State::Cell::ObjectiveLeft)
-    .value("ObjectiveRight", State::Cell::ObjectiveRight)
-    .value("ObjectiveUp", State::Cell::ObjectiveUp)
-    .value("ObjectiveDown", State::Cell::ObjectiveDown);
-
-  py::enum_<State::Ship>(state, "Ship")
-    .value("X", State::Ship::X)
-    .value("Y", State::Ship::Y)
-    .value("A", State::Ship::A)
-    .value("DX", State::Ship::DX)
-    .value("DY", State::Ship::DY)
-    .value("DA", State::Ship::DA);
+    .def_readonly("progress", &State::progress)
+    .def_readonly("data", &State::data);
 
   py::enum_<State::Outcome>(state, "Outcome")
     .value("Continue", State::Outcome::Continue)
     .value("Failure", State::Outcome::Failure)
     .value("Success", State::Outcome::Success);
+
+  state.attr("SHIP_X") = pybind11::int_(State::Data::ShipX);
+  state.attr("SHIP_Y") = pybind11::int_(State::Data::ShipY);
+  state.attr("SHIP_A") = pybind11::int_(State::Data::ShipA);
+  state.attr("SHIP_DX") = pybind11::int_(State::Data::ShipDX);
+  state.attr("SHIP_DY") = pybind11::int_(State::Data::ShipDY);
+  state.attr("SHIP_DA") = pybind11::int_(State::Data::ShipDA);
+  state.attr("DATA_SIZE") = pybind11::int_(State::Data::Size);
 
   // Runner
 
