@@ -82,20 +82,21 @@ struct Runner {
   explicit Runner(Settings settings);
   State state() const;
   void step(const Action& action);
-  std::string to_svg() const;
+  std::string toSvg() const;
 
 private:
+  State::Outcome detectOutcome() const;
+
   b2World m_world;
   b2Body* m_ground;
   b2Body* m_rocket;
   b2PolygonShape m_rocketThrusterLeft;
   b2PolygonShape m_rocketThrusterRight;
-  uint_fast64_t m_randomSeed;
   std::mt19937_64 m_random;
-
   float m_elapsed;
   bool m_actionLeft;
   bool m_actionRight;
+  State::Outcome m_currentOutcome;
 
   static constexpr auto RocketHWidth = 0.4f;
   static constexpr auto RocketHHeight = 2.0f;
@@ -110,11 +111,11 @@ Runner::Settings::Settings(std::optional<uint_fast64_t> seed_, std::vector<float
 
 Runner::Runner(Settings settings)
   : m_world({0.0f, -10.0f}),
-    m_randomSeed(settings.seed.value_or(std::chrono::system_clock::now().time_since_epoch().count())),
-    m_random(m_randomSeed),
+    m_random(settings.seed.value_or(std::chrono::system_clock::now().time_since_epoch().count())),
     m_elapsed(0),
     m_actionLeft(false),
-    m_actionRight(false) {
+    m_actionRight(false),
+    m_currentOutcome(State::Outcome::Continue) {
 
   auto groundDef = b2BodyDef();
   groundDef.position = {0, -10};
@@ -162,15 +163,6 @@ Runner::Runner(Settings settings)
 }
 
 State Runner::state() const {
-  auto outcome = State::Outcome::Continue;
-  if (MaxTime <= m_elapsed) {
-    outcome = State::Outcome::Success;
-  }
-  const auto& position = m_rocket->GetPosition();
-  if (20 <= std::abs(position.x) || position.y < 4 || 25 <= position.y || 1.5 <= std::abs(m_rocket->GetAngle())) {
-    outcome = State::Outcome::Failure;
-  }
-
   auto data = State::array_float(State::Data::Size);
   auto d = data.mutable_data();
   *(d + State::Data::ShipX) = m_rocket->GetPosition().x;
@@ -183,14 +175,14 @@ State Runner::state() const {
   std::fill(d + State::Data::ShipDA + 1, d + State::Data::Size, 0.0f);  // TODO: cell state data
 
   auto progress = 0.0f;  // TODO
-  return State(outcome, progress, std::move(data));
+  return State(m_currentOutcome, progress, std::move(data));
 }
 
 void Runner::step(const Action& action) {
   const auto thrust = m_rocket->GetWorldVector({0, 15 * m_rocket->GetMass()});
   m_actionLeft = *action.data(0);
   m_actionRight = *action.data(1);
-  for (auto sub = 0u; sub < Substeps; ++sub) {
+  for (auto sub = 0u; sub < Substeps && m_currentOutcome == State::Outcome::Continue; ++sub) {
     if (m_actionLeft) {
       m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({-RocketHWidth, -RocketHHeight}), true);
     }
@@ -198,8 +190,20 @@ void Runner::step(const Action& action) {
       m_rocket->ApplyForce(thrust, m_rocket->GetWorldPoint({RocketHWidth, -RocketHHeight}), true);
     }
     m_world.Step(Timestep / Substeps, 8, 3);
+    m_elapsed += Timestep / Substeps;
+    m_currentOutcome = detectOutcome();
   }
-  m_elapsed += Timestep;
+}
+
+State::Outcome Runner::detectOutcome() const {
+  const auto& position = m_rocket->GetPosition();
+  if (20 <= std::abs(position.x) || position.y < 4 || 25 <= position.y || 1.5 <= std::abs(m_rocket->GetAngle())) {
+    return State::Outcome::Failure;
+  }
+  if (MaxTime <= m_elapsed) {
+    return State::Outcome::Success;
+  }
+  return State::Outcome::Continue;
 }
 
 void beginBody(std::ostream& out, const b2Body& body) {
@@ -228,7 +232,7 @@ void drawFixtures(std::ostream& out, const char* fill, const b2Body& body) {
   }
 }
 
-std::string Runner::to_svg() const {
+std::string Runner::toSvg() const {
   const auto xmin = -30.f;
   const auto xmax = 30.f;
   const auto ymin = -1.f;
@@ -309,6 +313,6 @@ PYBIND11_MODULE(hover_game, m) {
     .def(py::init<Runner::Settings>(), "settings"_a)
     .def("step", &Runner::step, "action"_a)
     .def("state", &Runner::state)
-    .def("to_svg", &Runner::to_svg)
-    .def("_repr_html_", &Runner::to_svg);
+    .def("to_svg", &Runner::toSvg)
+    .def("_repr_html_", &Runner::toSvg);
 }
