@@ -1,5 +1,5 @@
 cxx = clang++-7
-cflags = -g -O0 -Wall -Wextra -Werror -std=c++17 -fPIC -shared -isystem /opt/pybind11/include/ -isystem /opt/box2d/ -isystem /usr/include/python3.6/
+cflags = -g -O0 -Wall -Wextra -Werror -std=c++17 -fcolor-diagnostics -fPIC -shared -isystem /opt/pybind11/include/ -isystem /opt/box2d/ -isystem /usr/include/python3.6/
 linkflags = -L /opt/box2d/lib -lBox2D
 
 rule buildso
