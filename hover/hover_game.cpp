@@ -179,6 +179,9 @@ State Runner::state() const {
 }
 
 void Runner::step(const Action& action) {
+  if (m_currentOutcome != State::Outcome::Continue) {
+    return;
+  }
   const auto thrust = m_rocket->GetWorldVector({0, 15 * m_rocket->GetMass()});
   m_actionLeft = *action.data(0);
   m_actionRight = *action.data(1);

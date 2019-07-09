@@ -8,8 +8,12 @@ $(function () {
                {"thrust_left": thrust_left,
                 "thrust_right": thrust_right},
                function (response) {
+                   $("#alert-not-connected").hide();
                    $("#viewer").html(response.html);
-               });
+               })
+            .fail(function() {
+                $("#alert-not-connected").show();
+            });
     }, 1000 / frame_rate);
 
     function restart() {
