@@ -10,6 +10,8 @@ $(function () {
                function (response) {
                    $("#alert-not-connected").hide();
                    $("#viewer").html(response.html);
+                   $("#badge-outcome-success").toggle(response.outcome === "Outcome.Success");
+                   $("#badge-outcome-failure").toggle(response.outcome === "Outcome.Failure")
                })
             .fail(function() {
                 $("#alert-not-connected").show();

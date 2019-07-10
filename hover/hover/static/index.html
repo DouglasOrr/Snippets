@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="/static/lib/bootstrap.css">
+  <link rel="stylesheet" href="/static/index.css">
 
   <title>Hover game</title>
 </head>
@@ -14,19 +15,15 @@
         <em>Game not running...</em>
       </div>
     </div>
-    <div class="row">
+    <div class="row" id="row-details">
       <div class="col">
-        <pre><code>
-            <kbd>SPACE</kbd> - start game
-            <kbd>m</kbd>     - fire right thruster
-            <kbd>c</kbd>     - fire left thruster
-        </code></pre>
+        <pre><code>    <kbd>SPACE</kbd> - start game
+    <kbd>m</kbd>     - fire right thruster
+    <kbd>c</kbd>     - fire left thruster</code></pre>
       </div>
-    </div>
-    <div class="row">
       <div class="col">
-        <pre><code id="state">
-        </code></pre>
+        <span class="badge badge-success" id="badge-outcome-success">Success</span>
+        <span class="badge badge-danger" id="badge-outcome-failure">Failure</span>
       </div>
     </div>
     <div class="alert alert-danger" role="alert" id="alert-not-connected">

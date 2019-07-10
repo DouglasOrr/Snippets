@@ -1,6 +1,7 @@
 #include <chrono>
 #include <optional>
 #include <random>
+#include <iostream>
 
 #include <Box2D/Box2D.h>
 #include <pybind11/pybind11.h>
@@ -70,7 +71,17 @@ State::State(Outcome outcome_, float progress_, array_float data_)
 ////////////////////////////////////////////////////////////////////////////////
 // Runner
 
-struct Runner {
+// struct ContactListener : b2ContactListener {
+//   void BeginContact(b2Contact* contact) {
+//     auto velocityA = contact->GetFixtureA()->GetBody()->GetLinearVelocity();
+//     auto velocityB = contact->GetFixtureB()->GetBody()->GetLinearVelocity();
+//     std::cout << "Begin contact va=" << velocityA.Length()
+//               << ", vb=" << velocityB.Length()
+//               << ", rv=" << (velocityA - velocityB).Length() << std::endl;
+//   }
+// };
+
+struct Runner : b2ContactListener {
   typedef py::array_t<bool, py::array::c_style | py::array::forcecast> Action;
 
   struct Settings {
@@ -80,13 +91,13 @@ struct Runner {
   };
 
   explicit Runner(Settings settings);
-  State state() const;
   void step(const Action& action);
+  State state() const;
   std::string toSvg() const;
 
-private:
-  State::Outcome detectOutcome() const;
+  void BeginContact(b2Contact* contact) override;
 
+private:
   b2World m_world;
   b2Body* m_ground;
   b2Body* m_rocket;
@@ -98,12 +109,16 @@ private:
   bool m_actionRight;
   State::Outcome m_currentOutcome;
 
+  static constexpr auto RocketFixtureTagTop = 1u;
+  static constexpr auto RocketFixtureTagBase = 2u;
+
   static constexpr auto RocketHWidth = 0.4f;
   static constexpr auto RocketHHeight = 2.0f;
   static constexpr auto RocketThrust = 15.0f;
   static constexpr auto Timestep = 0.05f;
   static constexpr auto Substeps = 10u;
   static constexpr auto MaxTime = 20.0f;
+  static constexpr auto CollisionSpeed = 10.0f;
 };
 
 Runner::Settings::Settings(std::optional<uint_fast64_t> seed_, std::vector<float> difficulty_)
@@ -116,6 +131,8 @@ Runner::Runner(Settings settings)
     m_actionLeft(false),
     m_actionRight(false),
     m_currentOutcome(State::Outcome::Continue) {
+
+  m_world.SetContactListener(this);
 
   auto groundDef = b2BodyDef();
   groundDef.position = {0, -10};
@@ -140,7 +157,7 @@ Runner::Runner(Settings settings)
                          {w, t-h},
                          {-w, t-h}};
   base.Set(basePoints, 4);
-  m_rocket->CreateFixture(&base, 1.0f);
+  m_rocket->CreateFixture(&base, 1.0f)->SetUserData(const_cast<unsigned*>(&RocketFixtureTagBase));
 
   auto top = b2PolygonShape();
   b2Vec2 topPoints[] = {{-w, t-h},
@@ -149,7 +166,7 @@ Runner::Runner(Settings settings)
                         {0, h},
                         {-w, h-w}};
   top.Set(topPoints, 5);
-  m_rocket->CreateFixture(&top, 1.0f);
+  m_rocket->CreateFixture(&top, 1.0f)->SetUserData(const_cast<unsigned*>(&RocketFixtureTagTop));
 
   auto d = 2 * RocketHWidth;
   b2Vec2 leftPoints[] = {{-2*w, -h},
@@ -182,7 +199,7 @@ void Runner::step(const Action& action) {
   if (m_currentOutcome != State::Outcome::Continue) {
     return;
   }
-  const auto thrust = m_rocket->GetWorldVector({0, 15 * m_rocket->GetMass()});
+  const auto thrust = m_rocket->GetWorldVector({0, RocketThrust * m_rocket->GetMass()});
   m_actionLeft = *action.data(0);
   m_actionRight = *action.data(1);
   for (auto sub = 0u; sub < Substeps && m_currentOutcome == State::Outcome::Continue; ++sub) {
@@ -194,19 +211,42 @@ void Runner::step(const Action& action) {
     }
     m_world.Step(Timestep / Substeps, 8, 3);
     m_elapsed += Timestep / Substeps;
-    m_currentOutcome = detectOutcome();
+    if (m_currentOutcome == State::Outcome::Continue && MaxTime <= m_elapsed) {
+      m_currentOutcome = State::Outcome::Failure;
+    }
+  }
+  // Check for successful landing
+  //  - Rocket is touching a surface
+  //  - Rocket is stationary & vertical
+  //  - Thrust is off
+  if (m_currentOutcome == State::Outcome::Continue
+      && !m_actionLeft && !m_actionRight) {
+    for (const b2Contact* contact = m_world.GetContactList(); contact; contact = contact->GetNext()) {
+      if ((contact->GetFixtureA()->GetBody() == m_rocket || contact->GetFixtureB()->GetBody() == m_rocket)
+          && m_rocket->GetLinearVelocity().Length() < 1e-2f
+          && std::abs(m_rocket->GetAngle()) < 1e-2f) { // Note: can only land on horizontal surfaces
+        m_currentOutcome = State::Outcome::Success;
+      }
+    }
   }
 }
 
-State::Outcome Runner::detectOutcome() const {
-  const auto& position = m_rocket->GetPosition();
-  if (20 <= std::abs(position.x) || position.y < 4 || 25 <= position.y || 1.5 <= std::abs(m_rocket->GetAngle())) {
-    return State::Outcome::Failure;
+void Runner::BeginContact(b2Contact* contact) {
+  const auto fixtureA = contact->GetFixtureA();
+  const auto fixtureB = contact->GetFixtureB();
+  const auto rocketFixture =
+    (fixtureA->GetBody() == m_rocket ? fixtureA
+     : (fixtureB->GetBody() == m_rocket ? fixtureB
+        : nullptr));
+
+  if (rocketFixture) {
+    auto isBaseFixture = (static_cast<const unsigned*>(rocketFixture->GetUserData()) == &RocketFixtureTagBase);
+    // Note: the relative speed of the bodies isn't necessarily the speed of the collision itself
+    auto speed = (fixtureA->GetBody()->GetLinearVelocity() - fixtureB->GetBody()->GetLinearVelocity()).Length();
+    if (!isBaseFixture || CollisionSpeed <= speed) {
+      m_currentOutcome = State::Outcome::Failure;
+    }
   }
-  if (MaxTime <= m_elapsed) {
-    return State::Outcome::Success;
-  }
-  return State::Outcome::Continue;
 }
 
 void beginBody(std::ostream& out, const b2Body& body) {

@@ -40,4 +40,5 @@ def route_game_state():
         right = form['thrust_right'].lower() == 'true'
         _runner.step(np.array([left, right], dtype=np.bool))
     return F.jsonify(dict(gameid=str(id(_runner)),
+                          outcome=str(_runner.state().outcome),
                           html=_runner.to_svg()))
