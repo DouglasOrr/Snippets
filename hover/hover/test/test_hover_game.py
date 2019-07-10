@@ -23,9 +23,9 @@ def test_runner():
     for control in [(False, False), (False, True), (True, False), (True, True)]:
         # runner_1a & runner_1b should always be the same
         # runner_2 should always be different
-        runner_1a = G.Runner(G.Runner.Settings(seed=100, difficulty=[1]))
-        runner_1b = G.Runner(G.Runner.Settings(seed=100, difficulty=[1]))
-        runner_2 = G.Runner(G.Runner.Settings(seed=200, difficulty=[1]))
+        runner_1a = G.Runner(seed=100, difficulty=[1])
+        runner_1b = G.Runner(seed=100, difficulty=[1])
+        runner_2 = G.Runner(seed=200, difficulty=[1])
 
         assert runner_1a.state().outcome == G.State.Outcome.Continue
 
@@ -80,7 +80,7 @@ def test_runner_easy(agent, min_win_rate, max_win_rate):
     runs = 100
     successes = 0
     for seed in range(runs):
-        runner = G.Runner(G.Runner.Settings(seed=seed, difficulty=[1]))
+        runner = G.Runner(seed=seed, difficulty=[1])
         while True:
             state = runner.state()
             if state.outcome != G.State.Outcome.Continue:

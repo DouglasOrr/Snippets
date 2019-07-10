@@ -5,14 +5,14 @@ import hover_game as G
 import numpy as np
 
 
-app = F.Flask(__name__)
-
-
 def _create_runner():
-    return G.Runner(G.Runner.Settings(None, [1]))
+    global _runner
+    _runner = G.Runner(seed=None, difficulty=[1])
 
 
-_runner = _create_runner()
+_runner = None
+_create_runner()
+app = F.Flask(__name__)
 
 
 @app.route('/')
@@ -22,8 +22,7 @@ def route_index():
 
 @app.route('/game/start', methods=['POST'])
 def route_game_start():
-    global _runner
-    _runner = _create_runner()
+    _create_runner()
     return F.jsonify(dict(gameid=str(id(_runner))))
 
 

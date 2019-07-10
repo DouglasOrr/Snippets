@@ -71,26 +71,10 @@ State::State(Outcome outcome_, float progress_, array_float data_)
 ////////////////////////////////////////////////////////////////////////////////
 // Runner
 
-// struct ContactListener : b2ContactListener {
-//   void BeginContact(b2Contact* contact) {
-//     auto velocityA = contact->GetFixtureA()->GetBody()->GetLinearVelocity();
-//     auto velocityB = contact->GetFixtureB()->GetBody()->GetLinearVelocity();
-//     std::cout << "Begin contact va=" << velocityA.Length()
-//               << ", vb=" << velocityB.Length()
-//               << ", rv=" << (velocityA - velocityB).Length() << std::endl;
-//   }
-// };
-
 struct Runner : b2ContactListener {
   typedef py::array_t<bool, py::array::c_style | py::array::forcecast> Action;
 
-  struct Settings {
-    std::optional<uint_fast64_t> seed;
-    std::vector<float> difficulty;
-    Settings(std::optional<uint_fast64_t> seed_, std::vector<float> difficulty_);
-  };
-
-  explicit Runner(Settings settings);
+  explicit Runner(std::optional<uint_fast64_t> seed, std::vector<float> difficulty);
   void step(const Action& action);
   State state() const;
   std::string toSvg() const;
@@ -121,12 +105,9 @@ private:
   static constexpr auto CollisionSpeed = 10.0f;
 };
 
-Runner::Settings::Settings(std::optional<uint_fast64_t> seed_, std::vector<float> difficulty_)
-  : seed(std::move(seed_)), difficulty(std::move(difficulty_)) { }
-
-Runner::Runner(Settings settings)
+Runner::Runner(std::optional<uint_fast64_t> seed, std::vector<float> /*difficulty*/)
   : m_world({0.0f, -10.0f}),
-    m_random(settings.seed.value_or(std::chrono::system_clock::now().time_since_epoch().count())),
+    m_random(seed.value_or(std::chrono::system_clock::now().time_since_epoch().count())),
     m_elapsed(0),
     m_actionLeft(false),
     m_actionRight(false),
@@ -345,15 +326,8 @@ PYBIND11_MODULE(hover_game, m) {
 
   // Runner
 
-  auto runner = py::class_<Runner>(m, "Runner");
-
-  py::class_<Runner::Settings>(runner, "Settings")
+  py::class_<Runner>(m, "Runner")
     .def(py::init<std::optional<uint_fast64_t>, std::vector<float>>(), "seed"_a, "difficulty"_a)
-    .def_readonly("seed", &Runner::Settings::seed)
-    .def_readonly("difficulty", &Runner::Settings::difficulty);
-
-  runner
-    .def(py::init<Runner::Settings>(), "settings"_a)
     .def("step", &Runner::step, "action"_a)
     .def("state", &Runner::state)
     .def("to_svg", &Runner::toSvg)
