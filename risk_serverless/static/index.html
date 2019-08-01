@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Risk odds</title>
+    <link rel="stylesheet" href="/static/lib/bootstrap.css">
+    <link rel="stylesheet" href="/static/odds.css">
+    <script src="/static/lib/jquery.js"></script>
+    <script src="/static/lib/popper.js"></script>
+    <script src="/static/lib/bootstrap.js"></script>
+    <script src="/static/odds.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <h1>Risk odds</h1>
+      </div>
+      <div class="row">
+        <div class="input-group">
+          <span class="input-group-text">Attacking armies</span>
+          <input type="number" id="attack" class="form-control" min="2" value="2">
+          <span class="input-group-text">Defending armies</span>
+          <input type="number" id="defend" class="form-control" min="1" value="1">
+        </div>
+      </div>
+      <div class="row">
+        <h1><span class="badge" id="outcome"></span></h1>
+      </div>
+    </div>
+  </body>
+</html>

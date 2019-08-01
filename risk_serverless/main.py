@@ -44,6 +44,10 @@ if __name__ == '__main__':
     app = flask.Flask(__name__)
 
     @app.route('/')
+    def route_index():
+        return flask.redirect('static/index.html')
+
+    @app.route('/odds')
     def route_odds():
         return odds(flask.request)
 
