@@ -241,20 +241,20 @@ void beginBody(std::ostream& out, const b2Body& body) {
 void endBody(std::ostream& out) {
   out << "</g>";
 }
-void drawPath(std::ostream& out, const char* fill, const b2Vec2* vertices, int count) {
-  out << "<path fill=\"" << fill << "\" d=\""
+void drawPath(std::ostream& out, const char* fill, float strokeWidth, const b2Vec2* vertices, int count) {
+  out << "<path stroke-width=\"" << strokeWidth << "\" stroke=\"" << fill << "\" fill=\"" << fill << "\" d=\""
       << "M " << vertices[0].x << ' ' << vertices[0].y;
   for (auto i = 1; i < count; ++i) {
     out << " L " << vertices[i].x << ' ' << vertices[i].y;
   }
   out << "\"/>";
 }
-void drawFixtures(std::ostream& out, const char* fill, const b2Body& body) {
+void drawFixtures(std::ostream& out, const char* fill, float strokeWidth, const b2Body& body) {
   for (auto fixture = body.GetFixtureList(); fixture; fixture = fixture->GetNext()) {
     auto shape = fixture->GetShape();
     if (shape->GetType() == b2Shape::e_polygon) {
       auto polygon = static_cast<const b2PolygonShape*>(shape);
-      drawPath(out, fill, polygon->m_vertices, polygon->m_count);
+      drawPath(out, fill, strokeWidth, polygon->m_vertices, polygon->m_count);
     }
   }
 }
@@ -266,6 +266,7 @@ std::string Runner::toSvg() const {
   const auto ymax = 29.f;
   const auto width = 800u;
   const auto height = static_cast<unsigned>(width * (ymax - ymin) / (xmax - xmin));
+  const auto pixelSize = (xmax - xmin) / width;
 
   std::ostringstream str;
   str << "<svg"
@@ -273,18 +274,18 @@ std::string Runner::toSvg() const {
       << " width=\"" << width << "\" height=\"" << height << "\">"
       << "<g transform=\"scale(1,-1) translate(0," << -(ymax + ymin) << ")\">";
 
-  beginBody(str, *m_rocket);
-  drawFixtures(str, "blue", *m_rocket);
-  if (m_actionLeft) {
-    drawPath(str, "orange", m_rocketThrusterLeft.m_vertices, m_rocketThrusterLeft.m_count);
-  }
-  if (m_actionRight) {
-    drawPath(str, "orange", m_rocketThrusterRight.m_vertices, m_rocketThrusterRight.m_count);
-  }
+  beginBody(str, *m_ground);
+  drawFixtures(str, "black", pixelSize, *m_ground);
   endBody(str);
 
-  beginBody(str, *m_ground);
-  drawFixtures(str, "black", *m_ground);
+  beginBody(str, *m_rocket);
+  drawFixtures(str, "blue", pixelSize, *m_rocket);
+  if (m_actionLeft) {
+    drawPath(str, "orange", pixelSize, m_rocketThrusterLeft.m_vertices, m_rocketThrusterLeft.m_count);
+  }
+  if (m_actionRight) {
+    drawPath(str, "orange", pixelSize, m_rocketThrusterRight.m_vertices, m_rocketThrusterRight.m_count);
+  }
   endBody(str);
 
   str << "</g></svg>";
