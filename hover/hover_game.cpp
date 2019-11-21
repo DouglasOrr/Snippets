@@ -33,10 +33,11 @@ struct State {
   };
 
   Outcome outcome;
+  float elapsed;
   float progress;
   array_float data;
 
-  State(Outcome outcome_, float progress_, array_float data_);
+  State(Outcome outcome_, float elapsed_, float progress_, array_float data_);
 };
 
 std::ostream& operator<<(std::ostream& out, const State::Outcome& outcome) {
@@ -53,6 +54,7 @@ std::ostream& operator<<(std::ostream& out, const State::Outcome& outcome) {
 std::ostream& operator<<(std::ostream& out, const State& state) {
   out << "State("
       << "outcome=" << state.outcome
+      << ", elapsed=" << state.elapsed
       << ", progress=" << state.progress
       << ", data=[";
   for (auto i = 0u; i < state.data.shape(0); ++i) {
@@ -62,8 +64,9 @@ std::ostream& operator<<(std::ostream& out, const State& state) {
   return out << "])";
 }
 
-State::State(Outcome outcome_, float progress_, array_float data_)
+State::State(Outcome outcome_, float elapsed_, float progress_, array_float data_)
   : outcome(outcome_),
+    elapsed(elapsed_),
     progress(progress_),
     data(std::move(data_)) { }
 
@@ -173,7 +176,7 @@ State Runner::state() const {
   std::fill(d + State::Data::ShipDA + 1, d + State::Data::Size, 0.0f);  // TODO: cell state data
 
   auto progress = 0.0f;  // TODO
-  return State(m_currentOutcome, progress, std::move(data));
+  return State(m_currentOutcome, m_elapsed, progress, std::move(data));
 }
 
 void Runner::step(const Action& action) {
@@ -300,14 +303,15 @@ PYBIND11_MODULE(hover_game, m) {
   // State
 
   auto state = py::class_<State>(m, "State");
-  state.def(py::init<State::Outcome, float, State::array_float>(),
-            "outcome"_a, "progress"_a, "data"_a)
+  state.def(py::init<State::Outcome, float, float, State::array_float>(),
+            "outcome"_a, "elapsed"_a, "progress"_a, "data"_a)
     .def("__repr__", [] (const State& state) {
         auto out = std::ostringstream();
         out << state;
         return out.str();
       })
     .def_readonly("outcome", &State::outcome)
+    .def_readonly("elapsed", &State::elapsed)
     .def_readonly("progress", &State::progress)
     .def_readonly("data", &State::data);
 

@@ -1,5 +1,8 @@
+"""Hover game API."""
+
 # flake8: noqa
 
-# from . import core, qlearning, render, web
-# from .core import *
+from hover_game import *
+
+from . import example, web
 from .web import app

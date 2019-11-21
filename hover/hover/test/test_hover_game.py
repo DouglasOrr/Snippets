@@ -1,16 +1,17 @@
-import functools as ft
-import hover_game as G
+import hover as H
 import numpy as np
 import pytest
 
 
 def test_state():
-    state = G.State(outcome=G.State.Outcome.Continue,
+    state = H.State(outcome=H.State.Outcome.Continue,
+                    elapsed=1.2,
                     progress=.75,
                     data=np.arange(15, dtype=np.float32))
-    assert 'Continue' in str(state)
-    assert '.75' in str(state)
-    assert '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]' in str(state)
+    assert 'outcome=Continue' in str(state)
+    assert 'elapsed=1.2' in str(state)
+    assert 'progress=0.75' in str(state)
+    assert 'data=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]' in str(state)
 
 
 def _state_eq(left, right):
@@ -23,11 +24,11 @@ def test_runner():
     for control in [(False, False), (False, True), (True, False), (True, True)]:
         # runner_1a & runner_1b should always be the same
         # runner_2 should always be different
-        runner_1a = G.Runner(seed=100, difficulty=[1])
-        runner_1b = G.Runner(seed=100, difficulty=[1])
-        runner_2 = G.Runner(seed=200, difficulty=[1])
+        runner_1a = H.Runner(seed=100, difficulty=[1])
+        runner_1b = H.Runner(seed=100, difficulty=[1])
+        runner_2 = H.Runner(seed=200, difficulty=[1])
 
-        assert runner_1a.state().outcome == G.State.Outcome.Continue
+        assert runner_1a.state().outcome == H.State.Outcome.Continue
 
         # Initial properties
         old_state_1a = runner_1a.state()
@@ -44,47 +45,30 @@ def test_runner():
             runner_2.step(control)
 
             # Same state runners should stay the same
-            if runner_1a.state().outcome == G.State.Outcome.Continue:
+            if runner_1a.state().outcome == H.State.Outcome.Continue:
                 assert not _state_eq(old_state_1a, runner_1a.state())
                 assert _state_eq(runner_1a.state(), runner_1b.state())
                 old_state_1a = runner_1a.state()
             assert not _state_eq(runner_1a.state(), runner_2.state())
 
-    assert runner_1a.state().outcome != G.State.Outcome.Continue
-    assert runner_2.state().outcome != G.State.Outcome.Continue
-
-
-def constant_agent(left, right, state):
-    """An agent that doesn't do anything."""
-    return [left, right]
-
-
-def pd_landing_agent(state):
-    """A hand-tuned agent for winning the 'easy game'"""
-    a = state.data[G.State.SHIP_A]
-    da = state.data[G.State.SHIP_DA]
-    c_right = -(a + .5 * da)
-    if .2 < np.abs(c_right):
-        return [c_right < 0, 0 < c_right]
-    if 8 < -state.data[G.State.SHIP_DY]:
-        return [True, True]
-    return [False, False]
+    assert runner_1a.state().outcome != H.State.Outcome.Continue
+    assert runner_2.state().outcome != H.State.Outcome.Continue
 
 
 @pytest.mark.parametrize('agent,min_win_rate,max_win_rate',
-                         [(ft.partial(constant_agent, left, right), 0.0, 0.01)
+                         [(H.example.constant_agent(left, right), 0.0, 0.01)
                           for left in [False, True]
                           for right in [False, True]]
-                         + [(pd_landing_agent, 0.95, 1.0)])
-def test_runner_easy(agent, min_win_rate, max_win_rate):
+                         + [(H.example.pd_landing_agent, 0.95, 1.0)])
+def test_example(agent, min_win_rate, max_win_rate):
     runs = 100
     successes = 0
     for seed in range(runs):
-        runner = G.Runner(seed=seed, difficulty=[1])
+        runner = H.Runner(seed=seed, difficulty=[1])
         while True:
             state = runner.state()
-            if state.outcome != G.State.Outcome.Continue:
-                successes += (state.outcome == G.State.Outcome.Success)
+            if state.outcome != H.State.Outcome.Continue:
+                successes += (state.outcome == H.State.Outcome.Success)
                 break
             runner.step(agent(state))
     assert min_win_rate <= successes / runs <= max_win_rate

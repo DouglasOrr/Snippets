@@ -2,10 +2,11 @@
 
 You have to make the rocket hover, maybe even land the thing!
 
-To build our image & start an interactive notebook:
+To build our image, run checks & start an interactive notebook:
 
-    ./build
-    ./run
+    ./run build-image
+    ./run check
+    ./run notebook
 
 ## Dev
 
