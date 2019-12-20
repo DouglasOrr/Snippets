@@ -11,7 +11,7 @@
         s = status -sb
         l = log --oneline --decorate
         tree = log --graph --oneline --all --decorate
-        unpushed = log --branches --not --remotes
+        head = log -1 --pretty=format:"%h"
+        unpushed = log --oneline --decorate --branches --not --remotes
         untracked = ls-files . --exclude-standard --others
         ignored = ls-files . --ignored --exclude-standard --others
-        head = log -1 --pretty=format:"%h"
