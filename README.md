@@ -28,6 +28,7 @@ Various little bits of code that I don't want to lose.
 | [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
 | [llvmtutorial](llvmtutorial) | ✗ | Following the LLVM language tutorial |
 | [wold](wold) | ✗ | Little programming language |
+| [liar](liar) | ✓ | Letters-In-A-Row example search algorithm for solving word connection games |
 
 ## Other
 
