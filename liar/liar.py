@@ -82,7 +82,7 @@ class Appy:
 1 1 1 1 1 1 1 1
 1 2 1 1 1 1 1 1
 1 1 1 1 1 1 1 1
-1 1 1 2 1 1 1 2
+1 1 1 2 1 1 1 1
 """)
 
     LETTER_MULTIPLIER = _multiplier_from_pattern("""
@@ -282,29 +282,44 @@ def get_start_mask(board, row):
     return adjacent & ~occupied[row, :]
 
 
-def leading_string(a):
-    """Get the string of consecutive tiles at the start of `a`."""
-    return ''.join(a[np.cumprod(np.array(a != EMPTY), dtype=np.bool)])
+def leading_string(tiles, wildcard_mask, scoring):
+    """Get the string of consecutive tiles at the start of `a`, and its' score.
+
+    returns -- (str, int) -- prefix and score
+    """
+    prefix = list(it.takewhile(lambda tile: tile != EMPTY, tiles))
+    return (''.join(prefix), sum(
+        0 if wildcard else scoring.POINTS[tile]
+        for tile, wildcard in zip(prefix, wildcard_mask)))
 
 
 # Note: score does not include the tile being added, may be None (no word formed)
 Constraint = collections.namedtuple('Constraint', ('allowed_tiles', 'score'))
 
 
-def get_vertical_constraint(board, scoring, words, row, col):
-    """Return a function that evaluates and scores a tile against a vertical constraint.
-
-    returns -- fn(str) -> (None | int) -- a function that takes a tile
-               returns None if the tile cannot be placed here
-               otherwise returns the score (not including `tile` for placement)
-    """
-    pre = leading_string(board[row-1::-1, col])[::-1]
-    post = leading_string(board[row+1:, col])
+def get_vertical_constraint(state, scoring, words, row, col):
+    """Return a constraint describing the vertical constraint for placement at (row, col)."""
+    pre, pre_score = leading_string(
+        state.board[row-1::-1, col], state.wildcard_mask[row-1::-1, col], scoring)
+    post, post_score = leading_string(
+        state.board[row+1:, col], state.wildcard_mask[row+1:, col], scoring)
     if (pre, post) == ('', ''):
         return Constraint(CHARACTERS, None)
     return Constraint(
-        {tile for tile in CHARACTERS if (pre + tile + post) in words},
-        sum(scoring.POINTS[tile] for tile in pre + post))
+        {tile for tile in CHARACTERS if (pre[::-1] + tile + post) in words},
+        pre_score + post_score)
+
+
+Runs = collections.namedtuple('Runs', ('left', 'left_score', 'right', 'right_score'))
+
+
+def get_horizontal_runs(state, scoring, row, col):
+    """Return a Runs object describing runs of characters to the left & right of the position."""
+    left, left_score = leading_string(
+        state.board[row, col-1::-1], state.wildcard_mask[row, col-1::-1], scoring)
+    right, right_score = leading_string(
+        state.board[row, col+1:], state.wildcard_mask[row, col+1:], scoring)
+    return Runs(left[::-1], left_score, right, right_score)
 
 
 def tile_options(tile):
@@ -314,60 +329,55 @@ def tile_options(tile):
 
 def search_row(state, scoring, vocab, row, add_candidate):
     """Main search algorithm - find all given-direction, given-row solutions."""
-    # precomputed constants
-    start_mask = get_start_mask(state.board, row)
     width = state.board.shape[0]
-    constraints = [get_vertical_constraint(state.board, scoring, vocab.words, row, col)
+    start_mask = get_start_mask(state.board, row)
+    constraints = [get_vertical_constraint(state, scoring, vocab.words, row, col)
                    for col in range(width)]
-    right_runs = [leading_string(state.board[row, col+1:]) for col in range(width)]
-    left_runs = [leading_string(state.board[row, col-1::-1])[::-1] for col in range(width)]
-    # mutable state
-    tiles_used = [False for tile in state.tiles]  # tiles that have been used to get to this state
-    word_multiplier = 1  # current accrued wordscore multiplier (could theoretically be >3)
-    main_score = 0  # current score for the main (horizontal) word being constructed
-    other_score = 0  # accumulated score for any other (vertical) words also constructed
+    runs = [get_horizontal_runs(state, scoring, row, col) for col in range(width)]
 
-    def _expand(pre, position, post, search_left):
-        nonlocal tiles_used, word_multiplier, main_score, other_score
-
+    def _expand(pre, position, post, word_score, total_multiplier, other_score,
+                tiles_used, search_left):
         left_position = position - 1 - len(pre)
         right_position = position + 1 + len(post)
         constraint = constraints[position]
-        new_word_multiplier = scoring.WORD_MULTIPLIER[row, position]
-        word_multiplier *= new_word_multiplier
+        word_multiplier = scoring.WORD_MULTIPLIER[row, position]
+        total_multiplier *= word_multiplier
+        letter_multiplier = scoring.LETTER_MULTIPLIER[row, position]
 
         for idx, src_tile in enumerate(state.tiles):
-            if not tiles_used[idx]:
+            if not tiles_used & (1 << idx):
                 for tile in tile_options(src_tile):
                     candidate = pre + tile + post
                     if candidate in vocab.substrings and tile in constraint.allowed_tiles:
-                        tiles_used[idx] = True
-                        tile_score = (
-                            scoring.LETTER_MULTIPLIER[row, position] * scoring.POINTS[src_tile])
-                        main_score += tile_score
-                        new_other_score = new_word_multiplier * (
+                        tile_score = letter_multiplier * scoring.POINTS[src_tile]
+                        c_tiles_used = tiles_used | (1 << idx)
+                        c_word_score = word_score + tile_score
+                        c_other_score = other_score + word_multiplier * (
                             0 if constraint.score is None else constraint.score + tile_score)
-                        other_score += new_other_score
 
                         if candidate in vocab.words:
-                            add_candidate(
-                                candidate, row, position - len(pre),
-                                word_multiplier * main_score + other_score +
-                                scoring.BINGO_SCORE * (sum(tiles_used) == len(tiles_used)))
+                            bingo = (c_tiles_used + 1 == 1 << len(state.tiles))
+                            add_candidate(candidate, row, position - len(pre),
+                                          total_multiplier * c_word_score + c_other_score +
+                                          scoring.BINGO_SCORE * bingo)
                         if candidate in vocab.prefixes and right_position < width:
-                            _expand(candidate, right_position, right_runs[right_position],
-                                    search_left=False)
+                            _expand(candidate, right_position, runs[right_position].right,
+                                    c_word_score + runs[right_position].right_score,
+                                    total_multiplier, c_other_score,
+                                    c_tiles_used, search_left=False)
                         if search_left and 0 <= left_position and not start_mask[left_position]:
-                            _expand(left_runs[left_position], left_position, candidate,
-                                    search_left=True)
-
-                        other_score -= new_other_score
-                        main_score -= tile_score
-                        tiles_used[idx] = False
-        word_multiplier //= new_word_multiplier
+                            _expand(runs[left_position].left, left_position, candidate,
+                                    c_word_score + runs[left_position].left_score,
+                                    total_multiplier, c_other_score,
+                                    c_tiles_used, search_left=True)
 
     for start in np.where(start_mask)[0]:
-        _expand(left_runs[start], start, right_runs[start], search_left=True)
+        _expand(runs[start].left, start, runs[start].right,
+                word_score=runs[start].left_score + runs[start].right_score,
+                total_multiplier=1,
+                other_score=0,
+                tiles_used=0,
+                search_left=True)
 
 
 def best_words(state, scoring, vocab, nbest):
@@ -420,7 +430,7 @@ def test_classic():
 
 def test_appy():
     assert (Appy.WORD_MULTIPLIER == 3).sum() == 8
-    assert (Appy.WORD_MULTIPLIER == 2).sum() == 13
+    assert (Appy.WORD_MULTIPLIER == 2).sum() == 12
     assert (Appy.LETTER_MULTIPLIER == 3).sum() == 16
     assert (Appy.LETTER_MULTIPLIER == 2).sum() == 24
 
@@ -536,10 +546,10 @@ thrace"""
 
 
 @pytest.mark.parametrize('sample,classic,appy', [
-    ('blank_0', ('SEVEN', 18), ('SEVEN', 40)),
+    ('blank_0', ('SEVEN', 18), ('SEVEN', 20)),
     ('constraint_0', ('ONE', 7), ('ONE', 8)),
-    ('bingo_0', ('SEVENTEEN', 90), ('SEVENTEEN', 67)),
-    ('general_0', ('SIX', 18), ('SIXTEEN', 30)),
+    ('bingo_0', ('SEVENTEEN', 98), ('SEVENTEEN', 73)),
+    ('general_0', ('SIX', 20), ('SIXTEEN', 32)),
 ])
 def test_samples(sample, classic, appy):
     state = State.open_csv(f'sample/{sample}.csv')
@@ -552,8 +562,8 @@ def test_samples(sample, classic, appy):
 
 def test_command_line():
     sample = 'general_0'
-    classic = ('SIX', 18)
-    appy = ('SIXTEEN', 30)
+    classic = ('SIX', 20)
+    appy = ('SIXTEEN', 32)
 
     headings = re.compile(r'### (?P<score>\d+): (?P<word>[A-Z]+)')
 
