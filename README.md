@@ -21,6 +21,8 @@ Various little bits of code that I don't want to lose.
 | [crypto-013](crypto-013) | ✓ | Mooc homework (please don't cheat) - Cryptography 013 |
 | [murmuration](murmuration) | ✓ | Tiny demo code - flocking simulation in Javascript |
 | [ivpractise](ivpractise) | ✓ | Tiny single interview question practise - 2d graphics editor |
+| [liar](liar) | ✓ | Letters-In-A-Row example search algorithm for solving word connection games |
+| [boystats](bystats) | ✓ | Parser for our own log format for tracking our son's stats |
 | [codeoperation](codeoperation) | ✗ | Cooperative code editor |
 | [treelearn](treelearn) | ✗ | Idea for a continuous training paradigm |
 | [sillygo](sillygo) | ✗ | AI & simulator for the game of Go |
@@ -28,7 +30,6 @@ Various little bits of code that I don't want to lose.
 | [langplayground](langplayground) | ✗ | Language interpreter/compiler playground in C++ |
 | [llvmtutorial](llvmtutorial) | ✗ | Following the LLVM language tutorial |
 | [wold](wold) | ✗ | Little programming language |
-| [liar](liar) | ✓ | Letters-In-A-Row example search algorithm for solving word connection games |
 
 ## Other
 
