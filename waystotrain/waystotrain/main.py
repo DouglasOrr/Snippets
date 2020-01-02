@@ -1,5 +1,6 @@
 import collections
 import itertools as it
+import time
 
 import torch as T
 import torchvision
@@ -80,7 +81,7 @@ def conv_pool_model(nonlinearity, pooling, final_pooling, levels, dropout,
 
 class Cifar10Experiment:
     DATA_PATH = 'data/cifar10'
-    TRANFORM = torchvision.transforms.ToTensor()
+    TRANSFORM = torchvision.transforms.ToTensor()
 
     @classmethod
     def training_data(cls):
@@ -108,7 +109,15 @@ class Cifar10Experiment:
 
 class MnistExperiment:
     DATA_PATH = 'data/mnist'
-    TRANFORM = torchvision.transforms.ToTensor()
+    TRANSFORM = torchvision.transforms.ToTensor()
+
+    @staticmethod
+    def training_settings():
+        return dict(
+            examples_per_batch=100,
+            batches_per_chunk=1,
+            chunks_per_run=100,
+        )
 
     @classmethod
     def training_data(cls):
@@ -135,6 +144,14 @@ class TinyExperiment:
                             for z in T.linspace(-1, 1, 10)])
     DATA = list(map(tuple, zip(DATA_X, T.argmax(DATA_X @ TARGET_TRANSFORM, -1))))
 
+    @staticmethod
+    def training_settings():
+        return dict(
+            examples_per_batch=1000,
+            batches_per_chunk=1,
+            chunks_per_run=100,
+        )
+
     @classmethod
     def training_data(cls):
         return cls.DATA
@@ -146,3 +163,34 @@ class TinyExperiment:
     @classmethod
     def model(cls, extra_outputs=0):
         return T.nn.Linear(*cls.TARGET_TRANSFORM.shape)
+
+
+def train(experiment, trainer_factory, log, cuda):
+    def _create_model(**args):
+        model = experiment.model(**args)
+        return model.cuda() if cuda else model
+    trainer = trainer_factory(_create_model)
+
+    settings = experiment.training_settings()
+    valid_batches = list(batches(experiment.test_data(), settings['examples_per_batch'], loop=False, cuda=cuda))
+    train_batches = batches(experiment.training_data(), settings['examples_per_batch'], loop=True, cuda=cuda)
+    t0 = time.time()
+
+    def _eval(train_subset, epoch, batch, example):
+        model = trainer.trained_model()
+        model.eval()
+        log(dict(train={} if train_subset is None else evaluate(train_subset, model),
+                 valid=evaluate(valid_batches, model),
+                 total=dict(time=time.time()-t0,
+                            epoch=epoch,
+                            batch=batch,
+                            example=example)))
+        model.train()
+
+    _eval(None, 0, 0, 0)
+    for chunk in it.islice(utility.group_chunks(train_batches, settings['batches_per_chunk']),
+                           settings['chunks_per_run']):
+        for batch in chunk:
+            trainer.step(batch)
+        _eval(chunk[-len(valid_batches):], batch.epoch, batch.batch, batch.example)
+    return trainer.trained_model()
