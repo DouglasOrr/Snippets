@@ -89,33 +89,46 @@ class ValueFunctionTrainer(BaseSgdTrainer):
                                T.randint(0, values.shape[1], (nbatch,), device=batch.x.device),
                                T.argmax(values, -1))
             reward = (selected == batch.y).float()
-        return T.nn.functional.binary_cross_entropy(
-            values[T.arange(nbatch), selected], reward
-        ).mean()  # TODO..?
+        return T.nn.functional.binary_cross_entropy(values[T.arange(nbatch), selected], reward)
 
 
 class ReinforceTrainer(Trainer):
-    def __init__(self, model_factory, optimizer, baseline):
-        self.baseline = baseline
-        self._model = model_factory(extra_outputs=baseline)
+    class _NoBaseline:
+        EXTRA_OUTPUTS = 0
+
+        @staticmethod
+        def baseline(model_output, reward):
+            return 0
+
+    class _ValueFunctionBaseline:
+        EXTRA_OUTPUTS = 1
+
+        @staticmethod
+        def baseline(model_output, reward):
+            baseline = T.sigmoid(model_output[..., -1])
+            T.nn.functional.binary_cross_entropy(baseline, reward).backward(retain_graph=True)
+            return baseline
+
+    def __init__(self, model_factory, optimizer, baseline_type):
+        self.baseline_type = baseline_type
+        self._baseline = {
+            None: self._NoBaseline,
+            'value': self._ValueFunctionBaseline,
+            # TODO: RollingMeanBaseline
+        }[baseline_type]
+        self._model = model_factory(extra_outputs=self._baseline.EXTRA_OUTPUTS)
         self._opt = optimizer(self._model.parameters())
 
     def _update_gradients(self, batch):
         output = self._model(batch.x)
-        if self.baseline:
-            logp = T.nn.functional.log_softmax(output[..., :-1], -1)
-            baseline = T.sigmoid(output[..., -1])
-            with T.no_grad():
-                actions = utility.sample_multinomial(T.exp(logp))
-                reward = (actions == batch.y).float()
-                value = reward - baseline
-            T.nn.functional.binary_cross_entropy(baseline, reward).backward(retain_graph=True)
-        else:
-            logp = T.nn.functional.log_softmax(output, -1)
-            with T.no_grad():
-                actions = utility.sample_multinomial(T.exp(logp))
-                value = (actions == batch.y).float()
-        grad = value[:, np.newaxis] * T.nn.functional.one_hot(actions, logp.shape[-1])
+        predictions = output[..., :-self._baseline.EXTRA_OUTPUTS] if self._baseline.EXTRA_OUTPUTS else output
+        logp = T.nn.functional.log_softmax(predictions, -1)
+        actions = utility.sample_multinomial(T.exp(logp))
+        reward = (actions == batch.y).float()
+        baseline = self._baseline.baseline(output, reward)
+        with T.no_grad():
+            value = reward - baseline
+            grad = value[:, np.newaxis] * T.nn.functional.one_hot(actions, logp.shape[-1])
         logp.backward(-grad / batch.y.shape[0])
 
     def step(self, batch):
@@ -124,7 +137,9 @@ class ReinforceTrainer(Trainer):
         self._opt.step()
 
     def trained_model(self):
-        return utility.SubsetOutputs(self._model, end=-1) if self.baseline else self._model
+        return (utility.SubsetOutputs(self._model, end=-self._baseline.EXTRA_OUTPUTS)
+                if self._baseline.EXTRA_OUTPUTS else
+                self._model)
 
 
 class EvolutionaryTrainer(Trainer):

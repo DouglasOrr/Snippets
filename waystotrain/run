@@ -55,7 +55,7 @@ def notebook(port):
            detach=True)
 
     print('Waiting for server to start, so we can tell you your token...')
-    time.sleep(2)
+    time.sleep(3)
     token = subprocess.check_output(
         f"docker logs {name} 2>&1 | grep -oE '\\?token=.+$' | head -1",
         shell=True).decode('utf8').strip()

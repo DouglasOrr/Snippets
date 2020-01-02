@@ -1,5 +1,6 @@
 import collections
 import itertools as it
+import sys
 import time
 
 import torch as T
@@ -9,9 +10,10 @@ from . import utility
 
 
 Batch = collections.namedtuple('Batch', ('epoch', 'batch', 'example', 'x', 'y'))
+Batch.cuda = lambda self: self._replace(x=self.x.cuda(), y=self.y.cuda())
 
 
-def batches(dataset, batch_size, loop, cuda):
+def batches(dataset, batch_size, loop):
     loader = T.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     batch = 0
     example = 0
@@ -19,9 +21,7 @@ def batches(dataset, batch_size, loop, cuda):
         for x, y in loader:
             example += len(y)
             batch += 1
-            yield Batch(epoch=epoch, batch=batch, example=example,
-                        x=x.cuda() if cuda else x,
-                        y=y.cuda() if cuda else y)
+            yield Batch(epoch=epoch, batch=batch, example=example, x=x, y=y)
         if not loop:
             break
 
@@ -38,6 +38,18 @@ def evaluate(batches, model):
     return dict(samples=samples,
                 error_rate=errors/samples,
                 cross_entropy=cross_entropy/samples)
+
+
+def log_stderr(d):
+    n_example = d['total']['example']
+    n_batch = d['total']['batch']
+    valid_error = d['valid']['error_rate']
+    valid_xent = d['valid']['cross_entropy']
+    train_error = ('{:.1%}'.format(d['train']['error_rate'])
+                   if 'error_rate' in d['train'] else
+                   'None')
+    sys.stderr.write(f'{n_batch} batches, {n_example:.1e} examples'
+                     f', {valid_error:.1%} ({train_error}), {valid_xent:.2f}\n')
 
 
 def _conv_subnet(nonlinearity, specs, in_channels):
@@ -115,7 +127,7 @@ class MnistExperiment:
     def training_settings():
         return dict(
             examples_per_batch=100,
-            batches_per_chunk=1,
+            batches_per_chunk=10,
             chunks_per_run=100,
         )
 
@@ -162,25 +174,32 @@ class TinyExperiment:
 
     @classmethod
     def model(cls, extra_outputs=0):
-        return T.nn.Linear(*cls.TARGET_TRANSFORM.shape)
+        n_input = cls.TARGET_TRANSFORM.shape[0]
+        n_output = cls.TARGET_TRANSFORM.shape[1]
+        return T.nn.Linear(n_input, n_output + extra_outputs)
 
 
-def train(experiment, trainer_factory, log, cuda):
-    def _create_model(**args):
+def train(experiment, trainer_factory, log, cuda=None):
+    if cuda is None:
+        cuda = T.cuda.is_available()
+
+    def map_cuda(batches):
+        return (b.cuda() for b in batches) if cuda else batches
+
+    def create_model(**args):
         model = experiment.model(**args)
         return model.cuda() if cuda else model
-    trainer = trainer_factory(_create_model)
+    trainer = trainer_factory(create_model)
 
     settings = experiment.training_settings()
-    valid_batches = list(batches(experiment.test_data(), settings['examples_per_batch'], loop=False, cuda=cuda))
-    train_batches = batches(experiment.training_data(), settings['examples_per_batch'], loop=True, cuda=cuda)
+    valid_batches = list(batches(experiment.test_data(), settings['examples_per_batch'], loop=False))
     t0 = time.time()
 
     def _eval(train_subset, epoch, batch, example):
         model = trainer.trained_model()
         model.eval()
-        log(dict(train={} if train_subset is None else evaluate(train_subset, model),
-                 valid=evaluate(valid_batches, model),
+        log(dict(train={} if train_subset is None else evaluate(map_cuda(train_subset), model),
+                 valid=evaluate(map_cuda(valid_batches), model),
                  total=dict(time=time.time()-t0,
                             epoch=epoch,
                             batch=batch,
@@ -188,9 +207,10 @@ def train(experiment, trainer_factory, log, cuda):
         model.train()
 
     _eval(None, 0, 0, 0)
+    train_batches = batches(experiment.training_data(), settings['examples_per_batch'], loop=True)
     for chunk in it.islice(utility.group_chunks(train_batches, settings['batches_per_chunk']),
                            settings['chunks_per_run']):
-        for batch in chunk:
+        for batch in map_cuda(chunk):
             trainer.step(batch)
         _eval(chunk[-len(valid_batches):], batch.epoch, batch.batch, batch.example)
     return trainer.trained_model()
