@@ -1,0 +1,13 @@
+flake8
+jupyter
+jupyterlab
+matplotlib
+numpy
+pandas
+pylint
+pytest
+pytest-cov
+seaborn
+tabulate
+torch
+torchvision
