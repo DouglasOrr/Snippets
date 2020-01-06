@@ -1,3 +1,6 @@
+# Bug with torchvision & Pillow==7
+Pillow==6.0
+
 flake8
 jupyter
 jupyterlab
