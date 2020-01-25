@@ -3,14 +3,15 @@ import re
 import sys
 
 
-def read_date(line):
+def read_date(line, year):
     if line == '🇺🇸':
-        return '2019-07-04'
-    m = re.search('^\d{1,2} \w+', line)
-    if not m:
-        raise ValueError('No date at start of line')
-    d = datetime.datetime.strptime(m.group(0), '%d %B')
-    return datetime.date(2019, d.month, d.day).strftime('%Y-%m-%d')
+        return datetime.date(year, 7, 4)
+    else:
+        m = re.search('^\d{1,2} \w+', line)
+        if not m:
+            raise ValueError('No date at start of line')
+        d = datetime.datetime.strptime(m.group(0), '%d %B')
+        return datetime.date(year, d.month, d.day)
 
 
 class Monitor:
@@ -50,23 +51,28 @@ class Monitor:
         self._sick_f.write(f'{self._date},{time or ""}\n')
 
 
-def convert(data_dir):
+def convert(data_dir, start_year):
     with open(f'{data_dir}/milks_and_sicks.txt', encoding='utf-8-sig') as f, \
          Monitor(f'{data_dir}/volume.csv', f'{data_dir}/sick.csv') as monitor:
+        year = start_year
         for line in f:
             line = line.strip()
             if line:
                 try:
-                    monitor.set_date(read_date(line))
+                    date = read_date(line, year)
                 except ValueError:
                     matched = False
-                    m = re.search(r'\[(\d{1,4})(\.\d)?\]', line)
-                    if m:
-                        monitor.update_volume(int(m.group(1)))
-                        matched = True
-                    m = re.search(r'([0-9]{4})?.*\b([sS]icks?|[vV]om(|med|s))\b', line)
-                    if m:
-                        monitor.add_sick(m.group(1))
-                        matched = True
-                    if not matched:
-                        sys.stderr.write(f'! {line}\n')
+                else:
+                    monitor.set_date(date.strftime('%Y-%m-%d'))
+                    year = (date - datetime.timedelta(days=1)).year
+                    matched = True
+                m = re.search(r'\[(\d{1,4})(\.\d)?\]', line)
+                if m and not matched:
+                    monitor.update_volume(int(m.group(1)))
+                    matched = True
+                m = re.search(r'([0-9]{4})?.*\b([sS]icks?|[vV]om(|med|s))\b', line)
+                if m and not matched:
+                    monitor.add_sick(m.group(1))
+                    matched = True
+                if not matched:
+                    sys.stderr.write(f'! {line}\n')
