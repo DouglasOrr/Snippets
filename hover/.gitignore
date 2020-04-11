@@ -1,6 +1,10 @@
-*.pyc
 .coverage*
-
-notebooks
+.ninja_deps
+.ninja_log
+*.pyc
 __pycache__
+*.so
+
 hover/static/lib
+local
+notebooks
