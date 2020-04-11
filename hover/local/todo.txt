@@ -1,0 +1,18 @@
+TODO
+
+ - Port Q learning to new framework
+ - Implement policy gradient in new framework
+ - Merge back to master
+
+TODO Phase 2
+
+ - Generate maze
+ - Implement maze reward
+ - Develop maze flying solution (Q/PG)
+
+Done
+
+ - Detect crashes
+ - Named arguments for C++ (Runner, Settings, State)
+ - Unit tests for Runner
+ - Refactor State
