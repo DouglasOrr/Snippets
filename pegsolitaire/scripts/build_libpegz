@@ -1,2 +1,2 @@
-INCLUDE="-I/opt/conda/include/python3.6m -I/opt/conda/pkgs/numpy-1.12.1-py36_blas_openblas_200/lib/python3.6/site-packages/numpy/core/include/numpy/"
+INCLUDE="-I/usr/include/python3.6m -I/opt/conda/lib/python3.7/site-packages/numpy/core/include/numpy/"
 g++ -std=c++11 -O3 -mtune=native -Wall -Wextra -Werror -fpic ${INCLUDE} libpegz.cpp -shared -o libpegz.so
