@@ -1,38 +1,43 @@
 # Setup notes
 
- - Install Google Chrome
- - `ssh-keygen` & add private key to GitHub
- - Install essentials from apt
-   - `git`
-   - `emacs-nox`
-   - `tree`
-   - `htop`
-   - `bmon`
-   - `net-tools`
-   - `powertop`
-   - `mosh`
-   - `jq`
-   - `fonts-inconsolata`
-   - `python3-pip`
-   - `docker-ce` (follow: https://docs.docker.com/install/linux/docker-ce/ubuntu/)
-   - Gnome
-     - `gnome-tweak-tool`
-     - `dconf-editor`
-   - Unity
-     - `compizconfig-settings-manager`
-     - `compiz-plugins` (so we can change the app switcher)
- - Copy config from this project
-   - `cp .emacs .gitconfig ~`
-     - or: `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.emacs -qO ~/.emacs`
-     - and: `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/.gitconfig -qO ~/.gitconfig`
-   - `cp flake8 ~/.config/`
-     - or: `wget https://raw.githubusercontent.com/DouglasOrr/Snippets/master/config/flake8 -qO ~/.config/flake8`
-   - `sudo cp bin/* /usr/local/bin` (you might want to be specific)
-   - Manually merge `.bashrc`
- - Configure desktop
-   - Gnome
-     - `gsettings set org.gnome.shell.app-switcher current-workspace-only true`
-     - Use `dconf-editor` to change `<Alt>Tab` from `switch-applications` to `cycle-windows`
-       (and similar for `<Alt><Shift>Tab`)
-   - Unity
-     - Use `compizconfig-settings-manager` to select the static app switcher
+## General
+
+```bash
+apt install git emacs-nox tree htop bmon net-tools powertop mosh jq python3-pip
+```
+
+Copy config from this project:
+
+```bash
+cp .emacs .gitconfig ~
+cp flake8 ~/.config/
+sudo cp bin/* /usr/local/bin  # you might want to be specific
+# manually merge `.bashrc`
+```
+
+## Desktop
+
+Manual install:
+ - Google Chrome
+ - Android Studio
+ - Docker (Engine)
+
+Run `ssh-keygen` & add private key to GitHub.
+
+```bash
+apt install fonts-inconsolata gimp vlc
+```
+
+### Desktop tweaks
+
+When Ubuntu insists on grouping windows in the app switcher...
+
+ - Gnome
+   - `gnome-tweak-tool`
+   - `dconf-editor`
+   - `gsettings set org.gnome.shell.app-switcher current-workspace-only true`
+   - Use `dconf-editor` to change `<Alt>Tab` from `switch-applications` to `cycle-windows` (and similar for `<Alt><Shift>Tab`)
+ - Unity
+   - `compizconfig-settings-manager`
+   - `compiz-plugins` (so we can change the app switcher)
+   - Use `compizconfig-settings-manager` to select the static app switcher
