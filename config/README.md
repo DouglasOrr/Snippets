@@ -15,6 +15,8 @@ sudo cp bin/* /usr/local/bin  # you might want to be specific
 # manually merge `.bashrc`
 ```
 
+After starting emacs, run `M-x package-install-selected-packages`.
+
 ## Desktop
 
 Manual install:
