@@ -13,15 +13,13 @@ IMAGE = PROJECT
 def sh(cmd):
     if subprocess.call(cmd, shell=True):
         sys.stderr.write(f'[[./run]] Command failed: {cmd}\n')
-        exit(1)
+        sys.exit(1)
 
 
 def docker(cmd, *args, detach=False):
     mode = '-d' if detach else '--rm -it'
     docker_args = ' '.join(args)
-    has_nvidia_docker = not subprocess.call(['which', 'nvidia-docker'], stdout=subprocess.DEVNULL)
-    docker = 'nvidia-docker' if has_nvidia_docker else 'docker'
-    sh(f'{docker} run {mode}'
+    sh(f'docker run {mode} --gpus all'
        f' -v `pwd`:/app -w /app -e PYTHONPATH=/app'
        f' {docker_args} {IMAGE} {cmd}')
 
