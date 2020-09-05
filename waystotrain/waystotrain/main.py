@@ -208,7 +208,7 @@ def train(experiment, trainer_factory, log, cuda=None):
 
     _eval(None, 0, 0, 0)
     train_batches = batches(experiment.training_data(), settings['examples_per_batch'], loop=True)
-    for chunk in it.islice(utility.group_chunks(train_batches, settings['batches_per_chunk']),
+    for chunk in it.islice(T.utils.data.BatchSampler(train_batches, settings['batches_per_chunk'], drop_last=False),
                            settings['chunks_per_run']):
         for batch in map_cuda(chunk):
             trainer.step(batch)

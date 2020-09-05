@@ -7,18 +7,6 @@ import pandas as pd
 import torch as T
 
 
-def group_chunks(iterable, n):
-    """Yield len=n lists of consecutive sequences from iterable."""
-    chunk = []
-    for item in iterable:
-        if n <= len(chunk):
-            yield chunk
-            chunk = []
-        chunk.append(item)
-    if chunk:
-        yield chunk
-
-
 def flat_items(d, prefix):
     """Recurses through a dict-of-dicts yielding ((key_0..key_n), value)."""
     if isinstance(d, dict):
