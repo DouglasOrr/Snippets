@@ -36,7 +36,8 @@ class Monitor:
             if self._max_volume:
                 self._volume_f.write(f'{self._date},{self._max_volume}\n')
             else:
-                raise ValueError(f'No volume for {self._date}')
+                sys.stderr.write(f'! No volume for {self._date}\n')
+                # raise ValueError(f'No volume for {self._date}')
         self._date = None
 
     def set_date(self, date):
