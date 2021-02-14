@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Sleep stats</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script type="application/javascript">
+        // Reading
+        function parseDiary(text, onError) {
+            // Header
+            const dateRegex = /^#\s*(\d{4}-\d{2}-\d{2})$/;
+            const timeRegex = /^(\d{4})$/;
+            const rangeRegex = /^(\d{4})-(\d{4})$/;
+            // Events
+            const wakeRegex = /^a?wake\b/;
+            const sleepRegex = /^(a?sleep|nap)\b/;
+            const downRegex = /^down\b/;
+            // Parse
+            const records = [];
+            const lines = text.split("\n").reverse();
+            lines.forEach((line, index) => {
+                const lineNo = lines.length - index;
+                line = line.trim();
+                function error(message) {
+                    onError(`Line ${lineNo}: ${message} "${line}"`);
+                }
+                if (!line) {
+                    // Empty is allowed - no-op
+                } else if (line.startsWith("#")) {
+                    const match = dateRegex.exec(line);
+                    if (!match) {
+                        error("Invalid date line");
+                    } else {
+                        // # YYYY-MM-DD
+                        records.push({
+                            date: match[1],
+                            wake: null,
+                            down: null,
+                            sleep: null,
+                            waking: [],
+                            sleeping: []
+                        });
+                    }
+                } else if (!records.length) {
+                    error("Last line should be a date \"#YYYY-MM-DD\"");
+                } else {
+                    const today = records[records.length - 1];
+                    const parts = line.split(",").map(s => s.trim());
+                    const head = (1 <= parts.length) ? parts[0].toLowerCase() : "";
+                    const event = (2 <= parts.length) ? parts[1].toLowerCase() : "";
+                    if (head === "water g") {
+                        // Ignore
+                    } else if (head === "water j") {
+                        // Ignore
+                    } else if (head === "curl") {
+                        // Ignore
+                    } else if (timeRegex.test(head)) {
+                        const time = parseInt(timeRegex.exec(head)[1]);
+                        if (wakeRegex.test(event)) {
+                            if (today.wake !== null) {
+                                error("Duplicate \"wake\" times");
+                            } else {
+                                today.wake = time;
+                            }
+                        } else if (sleepRegex.test(event)) {
+                            if (today.sleep !== null) {
+                                error("Duplicate \"sleep\" times");
+                            } else {
+                                today.sleep = time;
+                            }
+                        } else if (downRegex.test(event)) {
+                            if (today.down !== null) {
+                                error("Duplicate \"down\" times");
+                            } else {
+                                today.down = time;
+                            }
+                        } else {
+                            // Ignore (feed, sicks, etc.)
+                        }
+                    } else if (rangeRegex.test(head)) {
+                        const match = rangeRegex.exec(head);
+                        const range = [parseInt(match[1]), parseInt(match[2])];
+                        if (wakeRegex.test(event)) {
+                            today.waking.push(range);
+                        } else if (sleepRegex.test(event)) {
+                            today.sleeping.push(range);
+                        } else {
+                            error("Expected asleep, sleep, awake, wake, nap");
+                        }
+                    } else {
+                        error("Unexpected format");
+                    }
+                }
+            });
+            return records;
+        }
+        // Logical
+        function checkDiary(days, onError) {
+            days.forEach(day => {
+                ["wake", "down", "sleep"].forEach(key => {
+                    if (day[key] === null) {
+                        onError(`${day.date}: Missing "${key}"`);
+                    }
+                });
+            });
+        }
+        function toMinutes(time) {
+            return 60 * Math.floor(time / 100) + (time % 100);
+        }
+        function toHM(time) {
+            return 100 * Math.floor(time / 60) + (time % 60);
+        }
+        function duration(start, end) {
+            if (end < start) {
+                end += 2400;
+            }
+            return toHM(toMinutes(end) - toMinutes(start));
+        }
+        function transformDiary(days) {
+            const results = [];
+            var yesterday = { sleep: undefined, waking: [], sleeping: [] };
+            days.forEach(day => {
+                const waking = [];
+                const sleeping = [];
+                if (yesterday) {
+                    waking.push(...yesterday.waking.filter(w => w[0] > yesterday.sleep));
+                    sleeping.push(...yesterday.sleeping.filter(w => w[0] > yesterday.sleep));
+                }
+                waking.push(...day.waking.filter(w => w[0] < day.sleep));
+                sleeping.push(...day.sleeping.filter(w => w[0] < day.sleep));
+                const total = yesterday.sleep ?
+                    (duration(yesterday.sleep, day.wake)
+                        + sleeping.map(w => duration(w[0], w[1])).reduce((a, b) => a + b, 0)
+                        - waking.map(w => duration(w[0], w[1])).reduce((a, b) => a + b, 0))
+                    : null;
+                results.push({
+                    date: day.date,
+                    total: total,
+                    wake: day.wake,
+                    down: day.down,
+                    sleep: day.sleep,
+                    waking: waking,
+                    sleeping: sleeping
+                });
+                yesterday = day;
+            });
+            return results;
+        }
+        // Writing
+        function showHM(time) {
+            if (time === null) {
+                return "?";
+            }
+            const hh = Math.floor(time / 100).toString().padStart(2, "0");
+            const mm = (time % 100).toString().padStart(2, "0");
+            return hh + ":" + mm;
+        }
+        function writeDiary(days) {
+            const lines = [];
+            lines.push([
+                "Date", "Total", "Wake up", "Put down", "Fall asleep", "Wakings", "Naps",
+            ].join("\t"));
+            days.forEach(day => {
+                lines.push([
+                    day.date,
+                    showHM(day.total),
+                    showHM(day.wake),
+                    showHM(day.down),
+                    showHM(day.sleep),
+                    day.waking.map(w => showHM(w[0]) + "-" + showHM(w[1])).join(", "),
+                    day.sleeping.map(w => showHM(w[0]) + "-" + showHM(w[1])).join(", "),
+                ].join("\t"));
+            });
+            return lines.join("\n");
+        }
+        // Top-level
+        function getFileName(days) {
+            return `${days[days.length - 1].date} Sleep Diary.tsv`
+        }
+        function startDownload(csv, filename, link) {
+            link.setAttribute("href",
+                "data:text/tab-separated-values;charset=utf-8," + encodeURIComponent(csv));
+            link.setAttribute("download", filename);
+            link.click();
+        }
+        function onFileLoad(text) {
+            const errorLog = document.getElementById("error-log");
+            errorLog.value = "";
+            function onError(error) { errorLog.value += error + "\n"; }
+
+            const original = parseDiary(text, onError);
+            checkDiary(original, onError);
+            const days = transformDiary(original);
+            startDownload(writeDiary(days), getFileName(days), document.getElementById("download-link"));
+        }
+        function onFileInputChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) { onFileLoad(e.target.result); };
+                reader.readAsText(file);
+            }
+        }
+        window.addEventListener("load", () => {
+            document.getElementById("file-input")
+                .addEventListener("change", onFileInputChange, false);
+        });
+    </script>
+    <style>
+        #file-input {
+            margin-top: 2em;
+        }
+
+        #errors-p {
+            margin-top: 1em;
+        }
+
+        #error-log {
+            width: 100%;
+            height: 30em;
+            color: red;
+            padding: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <input type="file" id="file-input" />
+        <p id="errors-p"><b>Errors:</b><br />
+            <textarea readonly id="error-log"></textarea>
+        </p>
+        <a hidden id="download-link" download="sleep.tsv"></a>
+    </div>
+</body>
+
+</html>
